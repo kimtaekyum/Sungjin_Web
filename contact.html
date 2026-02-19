@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오시는 길 | 성진학원</title>
+  <meta name="description" content="성진학원 위치, 전화번호, 등록번호, 수강료 안내 및 상담 문의 폼 페이지입니다.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="오시는 길 | 성진학원">
+  <meta property="og:description" content="서울 양천구 성진학원 상담 문의와 오시는 길을 확인하세요.">
+  <meta property="og:url" content="./contact.html">
+  <meta property="og:image" content="assets/img/logo.png">
+  <link rel="icon" type="image/png" href="assets/img/logo.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/main.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-top"><div class="container header-top-inner"><a href="index.html" class="brand" aria-label="성진학원 홈"><img src="assets/img/logo.png" alt="성진학원 로고" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"><span class="brand-fallback">성진학원 | SUNG JIN ACADEMY</span></a><div class="header-meta"><div><strong>상담 문의</strong> 02-2693-6123</div><div>서울 양천구 오목로 15 지우빌딩 301, 401호</div></div></div></div>
+    <div class="container header-nav-inner"><button class="nav-toggle" aria-label="메뉴 열기" aria-expanded="false" aria-controls="primary-menu"><span></span><span></span><span></span></button><nav class="site-nav" id="primary-menu"><ul><li><a href="index.html">홈</a></li><li><a href="about.html">학원소개</a></li><li><a href="programs.html">수업안내</a></li><li><a href="results.html">성과·후기</a></li><li><a href="notice.html">공지사항</a></li><li><a href="contact.html">오시는 길</a></li></ul></nav></div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <h1>오시는 길 / 상담 문의</h1>
+        <p>성진학원 방문 안내와 상담 신청 정보를 확인하세요.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container grid-2">
+        <div class="card">
+          <h3>학원 안내</h3>
+          <p>안녕하세요. 대학 잘 보내는 성진학원입니다.<br>성진학원은 과정으로 이야기하고 대입 결과로 증명합니다.<br>최정예 선생님의 강의 + 명문대 조교쌤의 1:1 밀착 첨삭 시스템으로 아이들의 완전 학습을 추구합니다.</p>
+          <p><strong>교육청 등록번호:</strong> 제 977호</p>
+          <p><strong>위치:</strong> 서울 양천구 오목로 15 지우빌딩 301, 401호</p>
+          <p><strong>전화:</strong> 02-2693-6123</p>
+          <p><strong>블로그:</strong> <a href="https://blog.naver.com/sja6123" target="_blank" rel="noopener">https://blog.naver.com/sja6123</a></p>
+          <div class="cta-row">
+            <a class="btn btn-red" href="tel:02-2693-6123">전화하기</a>
+            <a class="btn btn-gray" href="https://blog.naver.com/sja6123" target="_blank" rel="noopener">블로그 바로가기</a>
+            <a class="btn btn-gray" href="https://naver.me/xrSMu90Z" target="_blank" rel="noopener">지도보기</a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>수강료 안내</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>과목/과정</th><th>수강료</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>초등수학</td><td>23만~</td></tr>
+                <tr><td>중등</td><td>25만~</td></tr>
+                <tr><td>고등</td><td>35만~</td></tr>
+                <tr><td>초등영어</td><td>23만~</td></tr>
+                <tr><td>중등</td><td>25만~</td></tr>
+                <tr><td>고등</td><td>33만~</td></tr>
+                <tr><td>중등국어</td><td>16만~</td></tr>
+                <tr><td>고등</td><td>24만~</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="card">
+          <h3>상담 문의 폼</h3>
+          <form class="contact-form" action="#" method="post">
+            <label for="name">이름</label>
+            <input id="name" name="name" type="text" required>
+
+            <label for="grade">학생학년</label>
+            <input id="grade" name="grade" type="text" placeholder="예: 초6, 중2, 고1" required>
+
+            <label for="subject">과목</label>
+            <select id="subject" name="subject">
+              <option value="수학">수학</option>
+              <option value="영어">영어</option>
+              <option value="국어">국어</option>
+              <option value="통합상담">통합상담</option>
+            </select>
+
+            <label for="message">문의내용</label>
+            <textarea id="message" name="message" rows="5" required></textarea>
+
+            <label for="phone">연락처</label>
+            <input id="phone" name="phone" type="tel" placeholder="010-0000-0000" required>
+
+            <div class="cta-row">
+              <button type="submit" class="btn btn-red">문의 남기기</button>
+            </div>
+            <p class="contact-note">폼 제출은 프론트 화면용입니다. 실제 알림/전송 연동은 추후 진행 가능합니다.</p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner"><a href="index.html" class="footer-logo" aria-label="성진학원 홈"><img src="assets/img/logo.png" alt="성진학원 로고" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';"></a><div><p>주소: 서울 양천구 오목로 15 지우빌딩 301, 401호 | 전화: 02-2693-6123</p><p>교육청 등록번호: 제 977호 | 블로그: https://blog.naver.com/sja6123</p><div class="footer-links"><a href="about.html">학원소개</a><a href="programs.html">수업안내</a><a href="results.html">성과·후기</a><a href="notice.html">공지사항</a><a href="contact.html">오시는 길</a></div></div></div>
+  </footer>
+</body>
+</html>
