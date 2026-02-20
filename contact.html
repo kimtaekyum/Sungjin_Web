@@ -28,48 +28,31 @@
       </div>
     </section>
 
-    <section class="section">
-      <div class="container grid-2">
-        <div class="card">
+    <section class="section" data-reveal="up">
+      <div class="container grid-2 contact-top-grid">
+        <div class="card academy-card contact-academy-card" data-reveal="left">
           <h3>학원 안내</h3>
-          <p>안녕하세요. 대학 잘 보내는 성진학원입니다.<br>성진학원은 과정으로 이야기하고 대입 결과로 증명합니다.<br>최정예 선생님의 강의 + 명문대 조교쌤의 1:1 밀착 첨삭 시스템으로 아이들의 완전 학습을 추구합니다.</p>
-          <p><strong>교육청 등록번호:</strong> 제 977호</p>
-          <p><strong>위치:</strong> 서울 양천구 오목로 15 지우빌딩 301, 401호</p>
-          <p><strong>전화:</strong> 02-2693-6123</p>
-          <p><strong>블로그:</strong> <a href="https://blog.naver.com/sja6123" target="_blank" rel="noopener">https://blog.naver.com/sja6123</a></p>
-          <div class="cta-row">
+          <p class="academy-intro">안녕하세요. 대학 잘 보내는 성진학원입니다.<br>성진학원은 과정으로 이야기하고 대입 결과로 증명합니다.<br>최정예 선생님의 강의 + 명문대 조교쌤의 1:1 밀착 첨삭 시스템으로 아이들의 완전 학습을 추구합니다.</p>
+          <div class="academy-badges" aria-label="학원 핵심 강점">
+            <span class="academy-badge">최정예 강사진</span>
+            <span class="academy-badge">1:1 밀착 첨삭</span>
+            <span class="academy-badge">입시 결과 중심</span>
+          </div>
+          <br><br>
+          <ul class="academy-info">
+            <li><strong>교육청 등록번호</strong><span>제 977호</span></li>
+            <li><strong>위치</strong><span>서울 양천구 오목로 15 지우빌딩 301, 401호</span></li>
+            <li><strong>전화</strong><span>02-2693-6123</span></li>
+            <li><strong>블로그</strong><span><a href="https://blog.naver.com/sja6123" target="_blank" rel="noopener">https://blog.naver.com/sja6123</a></span></li>
+          </ul>
+          <div class="cta-row academy-actions">
             <a class="btn btn-red" href="tel:02-2693-6123">전화하기</a>
             <a class="btn btn-gray" href="https://blog.naver.com/sja6123" target="_blank" rel="noopener">블로그 바로가기</a>
             <a class="btn btn-gray" href="https://naver.me/xrSMu90Z" target="_blank" rel="noopener">지도보기</a>
           </div>
         </div>
 
-        <div class="card">
-          <h3>수강료 안내</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>과목/과정</th><th>수강료</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>초등수학</td><td>23만~</td></tr>
-                <tr><td>중등</td><td>25만~</td></tr>
-                <tr><td>고등</td><td>35만~</td></tr>
-                <tr><td>초등영어</td><td>23만~</td></tr>
-                <tr><td>중등</td><td>25만~</td></tr>
-                <tr><td>고등</td><td>33만~</td></tr>
-                <tr><td>중등국어</td><td>16만~</td></tr>
-                <tr><td>고등</td><td>24만~</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <div class="card">
+        <div class="card contact-form-card" data-reveal="right">
           <h3>상담 문의 폼</h3>
           <form class="contact-form" action="#" method="post">
             <label for="name">이름</label>
@@ -98,6 +81,55 @@
             <p class="contact-note">폼 제출은 프론트 화면용입니다. 실제 알림/전송 연동은 추후 진행 가능합니다.</p>
           </form>
         </div>
+
+        <section class="card tuition" id="tuition" aria-labelledby="tuition-title" data-reveal="up">
+          <h3 id="tuition-title">수강료 안내</h3>
+          <div class="tuition-grid">
+            <article class="tuition-card">
+              <h4 class="tuition-grade">초등</h4>
+              <ul class="tuition-list">
+                <li>
+                  <span class="tuition-item">수학/영어</span>
+                  <span class="tuition-dots" aria-hidden="true"></span>
+                  <span class="tuition-price">230,000원</span>
+                </li>
+              </ul>
+              <p class="tuition-note">※ 수강료는 과정에 따라 변동될 수 있습니다.</p>
+            </article>
+            <article class="tuition-card">
+              <h4 class="tuition-grade">중등</h4>
+              <ul class="tuition-list">
+                <li>
+                  <span class="tuition-item">수학/영어</span>
+                  <span class="tuition-dots" aria-hidden="true"></span>
+                  <span class="tuition-price">260,000원</span>
+                </li>
+                <li>
+                  <span class="tuition-item">국어</span>
+                  <span class="tuition-dots" aria-hidden="true"></span>
+                  <span class="tuition-price">150,000원</span>
+                </li>
+              </ul>
+              <p class="tuition-note">※ 수강료는 과정에 따라 변동될 수 있습니다.</p>
+            </article>
+            <article class="tuition-card">
+              <h4 class="tuition-grade">고등</h4>
+              <ul class="tuition-list">
+                <li>
+                  <span class="tuition-item">수학/영어</span>
+                  <span class="tuition-dots" aria-hidden="true"></span>
+                  <span class="tuition-price">360,000원</span>
+                </li>
+                <li>
+                  <span class="tuition-item">국어</span>
+                  <span class="tuition-dots" aria-hidden="true"></span>
+                  <span class="tuition-price">260,000원</span>
+                </li>
+              </ul>
+              <p class="tuition-note">※ 수강료는 과정에 따라 변동될 수 있습니다.</p>
+            </article>
+          </div>
+        </section>
       </div>
     </section>
   </main>

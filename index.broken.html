@@ -46,65 +46,22 @@
   </header>
 
   <main>
-    <!--
-      배너 이미지 적용 규칙
-      - 1번 배경(완성 배너): /assets/img/hero-1-main.png
-      - 2번 배경(합격증 콜라주): assets/img/banners/hero-2-cert.jpg
-      - 3번 배경(후기): assets/img/banners/hero-3-review.jpg
-      - 파일을 추가하면 background-image로 자동 반영됩니다.
-    -->
-    <section class="hero-slider" aria-label="메인 배너">
-      <div class="hero-slides">
-        <article class="hero-slide is-active hero-slide--fit" data-index="0" style="--hero-bg: url('/assets/img/hero-1-main.png');">
-          <div class="hero-overlay"></div>
-          <div class="hero-center">
-            <h2 class="sr-only">최고의 선생님은 결과로 말합니다.</h2>
-            <p class="sr-only">대학 잘 보내는 학원, 과정으로 이야기하고 결과로 증명합니다.</p>
-          </div>
-        </article>
-
-        <article class="hero-slide" data-index="1" style="--hero-bg: url('assets/img/banners/hero-2-cert.jpg');">
-          <div class="hero-overlay"></div>
-          <div class="hero-center">
-            <h2 class="sr-only">합격을 축하합니다</h2>
-            <p class="sr-only">합격증을 모아 결과로 보여드립니다.</p>
-          </div>
-        </article>
-
-        <article class="hero-slide" data-index="2" style="--hero-bg: url('assets/img/banners/hero-3-review.jpg');">
-          <div class="hero-overlay"></div>
-          <div class="hero-content">
-            <p class="hero-kicker">후기로 전하는 신뢰</p>
-            <h2 class="hero-title">학생 · 학부모 후기</h2>
-            <div class="hero-reviews" aria-hidden="true">
-              <article class="hero-review">
-                <p>“오답 관리가 체계적이라 아이가 스스로 공부하는 힘이 생겼습니다.”</p>
-                <span>중2 학부모</span>
-              </article>
-              <article class="hero-review">
-                <p>“첨삭이 꼼꼼해서 혼자 할 때보다 실력이 빨리 늘었습니다.”</p>
-                <span>고1 학생</span>
-              </article>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <button class="hero-btn hero-btn--prev" type="button" aria-label="이전 배너">‹</button>
-      <button class="hero-btn hero-btn--next" type="button" aria-label="다음 배너">›</button>
-
-      <div class="hero-dots" role="tablist" aria-label="배너 선택">
-        <button type="button" class="dot is-active" role="tab" aria-selected="true" aria-label="배너 1"></button>
-        <button type="button" class="dot" role="tab" aria-selected="false" aria-label="배너 2"></button>
-        <button type="button" class="dot" role="tab" aria-selected="false" aria-label="배너 3"></button>
+    <section class="hero">
+      <div class="container hero-content">
+        <h1 class="hero-title">최고의 선생님은 결과로 말합니다.</h1>
+        <p class="hero-subtitle">
+          <span class="hl-red">대학</span> 잘 보내는 학원,
+          <span class="hl-red">과정</span>으로 이야기하고
+          <span class="hl-red">결과</span>로 증명합니다.
+        </p>
       </div>
     </section>
 
-    <section class="section" data-reveal="up">
+    <section class="section">
       <div class="container">
-        <h2 class="section-title" data-reveal="up">바로가기</h2>
+        <h2 class="section-title">바로가기</h2>
         <div class="quick-grid">
-          <a class="quick-card" href="about.html" aria-label="학원소개" data-reveal="up">
+          <a class="quick-card" href="about.html" aria-label="학원소개">
             <span class="quick-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" class="icon" role="img" aria-label="학원소개">
                 <path d="M3 10.5L12 4l9 6.5" />
@@ -115,7 +72,7 @@
             </span>
             <span class="quick-label">학원소개</span>
           </a>
-          <a class="quick-card" href="notice.html" aria-label="공지사항" data-reveal="up">
+          <a class="quick-card" href="notice.html" aria-label="공지사항">
             <span class="quick-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" class="icon" role="img" aria-label="공지사항">
                 <path d="M18 16V11a6 6 0 0 0-12 0v5l-2 2h16l-2-2Z" />
@@ -124,7 +81,7 @@
             </span>
             <span class="quick-label">공지사항</span>
           </a>
-          <a class="quick-card" href="programs.html" aria-label="학습정보" data-reveal="up">
+          <a class="quick-card" href="programs.html" aria-label="학습정보">
             <span class="quick-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" class="icon" role="img" aria-label="학습정보">
                 <path d="M4 19a2 2 0 0 0 2 2h6V5H6a2 2 0 0 0-2 2v12Z" />
@@ -134,7 +91,7 @@
             </span>
             <span class="quick-label">학습정보</span>
           </a>
-          <a class="quick-card" href="results.html" aria-label="교육정보" data-reveal="up">
+          <a class="quick-card" href="results.html" aria-label="교육정보">
             <span class="quick-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" class="icon" role="img" aria-label="교육정보">
                 <path d="M2 8l10-5 10 5-10 5L2 8Z" />
@@ -144,7 +101,7 @@
             </span>
             <span class="quick-label">교육정보</span>
           </a>
-          <a class="quick-card" href="contact.html" aria-label="오시는길" data-reveal="up">
+          <a class="quick-card" href="contact.html" aria-label="오시는길">
             <span class="quick-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" class="icon" role="img" aria-label="오시는길">
                 <path d="M12 22s7-4.5 7-10a7 7 0 0 0-14 0c0 5.5 7 10 7 10Z" />
@@ -160,7 +117,7 @@
     <section class="section">
       <div class="container">
         <h2 class="section-title">공지사항</h2>
-        <div class="notice-summary" data-reveal="up">
+        <div class="notice-summary">
           <a class="notice-item" href="notice.html">
             <span>[공지] 2026학년도 봄학기 반편성 및 개강 안내</span>
             <span class="notice-date">2026-02-10</span>
@@ -187,9 +144,9 @@
 
     <section class="section">
       <div class="container">
-        <h2 class="section-title">블로그 최신글 (수동 입력용)</h2>
-        <div class="blog-box" data-reveal="up">
-          <!-- <p>네이버 블로그 최신글은 <code>assets/data/blog_posts.csv</code> 파일을 수정해 관리할 수 있습니다.</p> -->
+        <h2 class="section-title">블로그 최신글</h2>
+        <div class="blog-box">
+          <!-- <p>네이버 블로그 최신글은 <code>assets/data/blog_posts.json</code> 파일을 수정해 관리할 수 있습니다.</p> -->
           <ul class="blog-list" id="blog-post-list">
             <li>불러오는 중...</li>
           </ul>
