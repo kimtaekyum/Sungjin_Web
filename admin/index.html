@@ -1,0 +1,226 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>성진학원 관리자</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+  <link rel="stylesheet" href="./admin.css?v=20260302a">
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <h1>성진학원 관리자</h1>
+      <div class="admin-header-actions">
+        <a href="../index.html" class="admin-home-link" aria-label="성진학원 홈으로 이동">
+          <img src="../assets/img/logo.png" alt="성진학원 로고" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+          <span class="admin-home-fallback">성진학원 홈</span>
+        </a>
+        <button id="logoutBtn" class="btn btn-secondary" type="button" hidden>로그아웃</button>
+      </div>
+    </header>
+
+    <p id="globalStatus" class="status" role="status" aria-live="polite"></p>
+
+    <section id="authView" class="panel auth-panel" aria-labelledby="authTitle">
+      <div class="auth-intro">
+        <p class="auth-kicker">SUNG JIN ADMIN</p>
+        <h2 id="authTitle">관리자 로그인</h2>
+        <p>공지/성과/후기/블로그 게시글을 한 화면에서 관리할 수 있습니다.</p>
+      </div>
+
+      <div class="auth-card">
+        <form id="loginForm" class="form-grid auth-form" novalidate>
+          <label for="email">이메일</label>
+          <input id="email" name="email" type="email" autocomplete="username" placeholder="admin@example.com" required>
+
+          <label for="password">비밀번호</label>
+          <div class="password-field">
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="비밀번호 입력" required>
+            <button id="passwordRevealBtn" class="btn btn-secondary password-reveal-btn" type="button" aria-controls="password" aria-label="비밀번호 보기">보기</button>
+          </div>
+
+          <button id="loginBtn" class="btn btn-primary" type="button">로그인</button>
+        </form>
+
+        <div class="auth-meta">
+          <a class="btn btn-secondary" href="./preview.html">미리보기로 보기</a>
+        </div>
+      </div>
+
+      <p id="authMessage" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="dashboardView" class="panel" hidden>
+      <nav class="tabs" aria-label="관리자 탭">
+        <button class="tab-btn is-active" type="button" data-tab="posts">콘텐츠 관리</button>
+        <button class="tab-btn" type="button" data-tab="help">설정/운영 도움말</button>
+      </nav>
+
+      <section id="tab-posts" class="tab-panel">
+        <div class="toolbar">
+          <div class="toolbar-row">
+            <label for="filterCategory">카테고리</label>
+            <select id="filterCategory">
+              <option value="all">전체</option>
+              <option value="notice">공지사항 (notice.html)</option>
+              <option value="result">성과 사례 (results.html)</option>
+              <option value="review">후기 (results.html)</option>
+              <option value="blog">블로그 소식 (홈 블로그 영역)</option>
+            </select>
+          </div>
+
+          <div class="toolbar-row toolbar-search">
+            <label for="searchTitle">제목 검색</label>
+            <input id="searchTitle" type="search" placeholder="제목 일부 입력">
+          </div>
+        </div>
+
+        <section id="blogSlotsSection" class="blog-slots" hidden>
+          <h3>홈 블로그 5개 슬롯 관리</h3>
+          <p class="blog-slots-desc">총 5개만 노출됩니다. 기존 글을 바꾸려면 먼저 삭제한 뒤 빈 슬롯에 재등록하세요.</p>
+          <div id="blogSlotsGrid" class="blog-slots-grid"></div>
+          <p id="blogSlotsMessage" class="status" role="status" aria-live="polite"></p>
+        </section>
+
+        <div id="postsTableWrap" class="table-wrap">
+          <table>
+            <caption class="sr-only">글 목록</caption>
+            <thead>
+              <tr>
+                <th scope="col">제목</th>
+                <th scope="col">카테고리</th>
+                <th scope="col">발행/수정일</th>
+                <th scope="col">액션</th>
+              </tr>
+            </thead>
+            <tbody id="postsTableBody"></tbody>
+          </table>
+        </div>
+
+        <form id="postForm" class="editor" novalidate>
+          <h3 id="formTitle">글 작성</h3>
+          <input id="postId" type="hidden">
+
+          <label for="title">제목 *</label>
+          <input id="title" name="title" type="text" maxlength="120" required>
+          <p id="titleHint" class="field-hint" hidden>성과 사례 제목은 30자 이내로 입력해주세요.</p>
+          <p id="editorCategoryText" class="field-hint">작성 카테고리: -</p>
+          <p id="editorCategoryHint" class="status" hidden>상단 카테고리에서 공지사항/성과 사례/후기를 선택하면 글을 작성할 수 있습니다.</p>
+
+          <section id="resultCaseFields" class="result-case-fields" hidden>
+            <h4>성과 사례 입력</h4>
+            <label for="resultDate">날짜 *</label>
+            <input id="resultDate" name="resultDate" type="date">
+
+            <label for="resultSummary">내용 *</label>
+            <textarea id="resultSummary" name="resultSummary" rows="6" placeholder="성과 사례 내용을 입력하세요"></textarea>
+
+            <div class="upload-group">
+              <label for="resultImageFile">사진 1장 *</label>
+              <input id="resultImageFile" type="file" accept="image/*">
+              <progress id="resultImageProgress" max="100" value="0" hidden></progress>
+              <div id="resultImagePreview" class="preview-grid"></div>
+            </div>
+          </section>
+
+          <section id="reviewFields" class="review-fields" hidden>
+            <h4>후기 입력</h4>
+            <div class="review-profile-row">
+              <div id="reviewProfilePreview" class="review-profile-preview" aria-label="후기 프로필 미리보기">사진</div>
+              <div class="review-profile-controls">
+                <label for="reviewProfileFile">프로필 사진 1장 *</label>
+                <input id="reviewProfileFile" type="file" accept="image/*">
+                <progress id="reviewProfileProgress" max="100" value="0" hidden></progress>
+              </div>
+            </div>
+
+            <label for="reviewYear">연도 *</label>
+            <select id="reviewYear" name="reviewYear">
+              <option value="">연도 선택</option>
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+            </select>
+
+            <label for="reviewText">내용 * (40자 이내)</label>
+            <textarea id="reviewText" name="reviewText" rows="4" maxlength="40" placeholder="후기 내용을 40자 이내로 입력하세요"></textarea>
+            <p id="reviewTextCount" class="field-hint">0 / 40</p>
+          </section>
+
+          <section id="standardContentFields">
+            <label for="contentEditor">본문 *</label>
+            <div id="contentEditor" class="quill-editor"></div>
+            <textarea id="content" name="content" hidden required></textarea>
+
+            <div class="upload-group">
+              <label for="attachmentFiles">첨부파일 (다중, 각 20MB 이하)</label>
+              <input id="attachmentFiles" type="file" multiple>
+              <progress id="attachmentProgress" max="100" value="0" hidden></progress>
+              <div id="attachmentList" class="attachment-list"></div>
+            </div>
+          </section>
+
+          <div class="editor-actions">
+            <button class="btn btn-primary" type="submit">저장</button>
+            <button id="cancelEditBtn" class="btn btn-secondary" type="button">취소</button>
+          </div>
+          <p id="formMessage" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="tab-help" class="tab-panel" hidden>
+        <h2>설정 / 운영 도움말</h2>
+        <article class="help-card">
+          <h3>컬렉션 카테고리 구조</h3>
+          <ul>
+            <li>컬렉션: <code>posts</code></li>
+            <li>카테고리: <code>notice</code>(공지사항), <code>result</code>(성과 사례), <code>review</code>(후기), <code>blog</code>(블로그 소식)</li>
+            <li>스토리지 경로: <code>posts/{postId}/attachments/{filename}</code>, <code>posts/inline/{filename}</code>, <code>posts/{postId}/review/{filename}</code></li>
+          </ul>
+        </article>
+        <article class="help-card">
+          <h3>페이지 반영 위치</h3>
+          <ul>
+            <li><code>notice</code>: 공지사항 페이지(<code>notice.html</code>) 및 홈 공지 영역</li>
+            <li><code>result</code>: 성과/후기 페이지(<code>results.html</code>) 성과 영역</li>
+            <li><code>review</code>: 성과/후기 페이지(<code>results.html</code>) 후기 영역</li>
+            <li><code>blog</code>: 홈의 블로그 최신글 영역</li>
+          </ul>
+        </article>
+        <article class="help-card">
+          <h3>운영 팁</h3>
+          <ul>
+            <li>모든 글은 저장 시 즉시 <code>published</code> 상태로 반영됩니다.</li>
+            <li>블로그 소식은 카테고리 필터에서 5개 슬롯으로만 관리합니다.</li>
+            <li>성과 사례는 사진 1장, 제목(30자), 날짜, 내용으로 입력합니다.</li>
+            <li>후기는 원형 프로필 사진 1장, 연도, 내용(40자 이내)으로 입력합니다.</li>
+          </ul>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <div id="imageCropModal" class="crop-modal" hidden aria-hidden="true">
+    <div class="crop-modal__backdrop" data-action="crop-cancel"></div>
+    <div class="crop-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="cropModalTitle">
+      <h3 id="cropModalTitle">사진 영역 선택</h3>
+      <p class="crop-modal__desc">영역을 조정한 뒤 적용을 누르면 반영됩니다.</p>
+      <div class="crop-modal__stage">
+        <img id="cropImage" alt="원본 미리보기">
+      </div>
+      <div class="crop-modal__actions">
+        <button type="button" class="btn btn-secondary" data-action="crop-cancel">취소</button>
+        <button type="button" id="cropApplyBtn" class="btn btn-primary">적용</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+  <script type="module" src="./admin.js?v=20260302c"></script>
+</body>
+</html>

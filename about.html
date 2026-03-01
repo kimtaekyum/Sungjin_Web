@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -7,14 +7,16 @@
   <meta name="description" content="원장 인사말, 교육 철학, 연혁/실적, 강사소개, 시설 안내를 확인하세요.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="학원소개 | 성진학원">
-  <meta property="og:description" content="과정으로 이야기하고 결과로 증명하는 성진학원의 소개 페이지입니다.">
+  <meta property="og:description" content="원장 인사말, 교육 철학, 강사진, 시설 정보를 담은 성진학원 학원소개 페이지입니다.">
   <meta property="og:url" content="./about.html">
   <meta property="og:image" content="assets/img/logo.png">
+  <link rel="canonical" href="./about.html">
   <link rel="icon" type="image/png" href="assets/img/logo.png">
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="assets/js/main.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">본문 바로가기</a>
   <header class="site-header">
     <div class="header-top">
       <div class="container header-top-inner">
@@ -39,13 +41,13 @@
           <li><a href="programs.html">수업안내</a></li>
           <li><a href="results.html">성과·후기</a></li>
           <li><a href="notice.html">공지사항</a></li>
-          <li><a href="contact.html">오시는 길</a></li>
+          <li><a href="contact.html">상담 문의</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main>
+  <main id="main">
     <!-- 이미지는 아래 경로에 넣으면 자동 적용됩니다(HTML 수정 불필요). -->
     <!-- assets/img/about/principal.jpg -->
     <!-- assets/img/about/philosophy.jpg -->
@@ -64,7 +66,6 @@
           <a href="#teachers">강사소개</a>
           <a href="#facility">시설</a>
         </nav>
-        <a class="btn btn-red btn-faq" href="programs.html#faq">FAQ 보러가기</a>
       </div>
     </section>
 
@@ -199,13 +200,77 @@
       <div class="container">
         <h2 class="section-title">5. 시설</h2>
         <div class="facility-grid">
-          <!-- 실제 시설 이미지는 assets/img/ 폴더에 넣고 아래 placeholder를 이미지 태그로 교체하세요. -->
-          <div class="facility-item">시설 사진 1</div>
-          <div class="facility-item">시설 사진 2</div>
-          <div class="facility-item">시설 사진 3</div>
-          <div class="facility-item">시설 사진 4</div>
-          <div class="facility-item">시설 사진 5</div>
-          <div class="facility-item">시설 사진 6</div>
+          <button type="button" class="facility-item is-placeholder"
+            data-lightbox="/assets/img/facility/facility-01.jpg"
+            data-caption="시설 사진 1"
+            style="--thumb: url('/assets/img/facility/facility-01.jpg');">
+            <div class="facility-thumb"></div>
+            <span class="facility-badge">이미지 추가 예정</span>
+            <div class="facility-overlay">
+              <strong>시설 사진 1</strong>
+              <span>클릭하여 확대</span>
+            </div>
+          </button>
+
+          <button type="button" class="facility-item is-placeholder"
+            data-lightbox="/assets/img/facility/facility-02.jpg"
+            data-caption="시설 사진 2"
+            style="--thumb: url('/assets/img/facility/facility-02.jpg');">
+            <div class="facility-thumb"></div>
+            <span class="facility-badge">이미지 추가 예정</span>
+            <div class="facility-overlay">
+              <strong>시설 사진 2</strong>
+              <span>클릭하여 확대</span>
+            </div>
+          </button>
+
+          <button type="button" class="facility-item is-placeholder"
+            data-lightbox="/assets/img/facility/facility-03.jpg"
+            data-caption="시설 사진 3"
+            style="--thumb: url('/assets/img/facility/facility-03.jpg');">
+            <div class="facility-thumb"></div>
+            <span class="facility-badge">이미지 추가 예정</span>
+            <div class="facility-overlay">
+              <strong>시설 사진 3</strong>
+              <span>클릭하여 확대</span>
+            </div>
+          </button>
+
+          <button type="button" class="facility-item is-placeholder"
+            data-lightbox="/assets/img/facility/facility-04.jpg"
+            data-caption="시설 사진 4"
+            style="--thumb: url('/assets/img/facility/facility-04.jpg');">
+            <div class="facility-thumb"></div>
+            <span class="facility-badge">이미지 추가 예정</span>
+            <div class="facility-overlay">
+              <strong>시설 사진 4</strong>
+              <span>클릭하여 확대</span>
+            </div>
+          </button>
+
+          <button type="button" class="facility-item is-placeholder"
+            data-lightbox="/assets/img/facility/facility-05.jpg"
+            data-caption="시설 사진 5"
+            style="--thumb: url('/assets/img/facility/facility-05.jpg');">
+            <div class="facility-thumb"></div>
+            <span class="facility-badge">이미지 추가 예정</span>
+            <div class="facility-overlay">
+              <strong>시설 사진 5</strong>
+              <span>클릭하여 확대</span>
+            </div>
+          </button>
+
+          <button type="button" class="facility-item is-placeholder"
+            data-lightbox="/assets/img/facility/facility-06.jpg"
+            data-caption="시설 사진 6"
+            style="--thumb: url('/assets/img/facility/facility-06.jpg');">
+            <div class="facility-thumb"></div>
+            <span class="facility-badge">이미지 추가 예정</span>
+            <div class="facility-overlay">
+              <strong>시설 사진 6</strong>
+              <span>클릭하여 확대</span>
+            </div>
+          </button>
         </div>
       </div>
     </section>
@@ -224,10 +289,11 @@
           <a href="programs.html">수업안내</a>
           <a href="results.html">성과·후기</a>
           <a href="notice.html">공지사항</a>
-          <a href="contact.html">오시는 길</a>
+          <a href="contact.html">상담 문의</a>
         </div>
       </div>
     </div>
   </footer>
 </body>
 </html>
+

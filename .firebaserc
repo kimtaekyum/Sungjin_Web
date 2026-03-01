@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "sungjin-academy-web",
+    "prod": "sungjin-web",
+    ".": "sungjin-web"
+  },
+  "targets": {},
+  "etags": {}
+}

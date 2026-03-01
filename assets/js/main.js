@@ -1,12 +1,17 @@
 (function () {
+  let initialized = false;
   let revealObserver;
   let revealInstantMode = false;
-  function setupMobileNav() {
+  let visibilityListenerBound = false;
+
+  function initNavToggle() {
     const navToggle = document.querySelector(".nav-toggle");
     const nav = document.querySelector(".site-nav");
-    if (!navToggle || !nav) {
+    if (!navToggle || !nav || navToggle.dataset.bound === "true") {
       return;
     }
+
+    navToggle.dataset.bound = "true";
 
     navToggle.addEventListener("click", function () {
       const isOpen = nav.classList.toggle("open");
@@ -29,8 +34,10 @@
     const page = (location.pathname.split("/").pop() || "index.html").toLowerCase();
     document.querySelectorAll(".site-nav a").forEach(function (link) {
       const href = (link.getAttribute("href") || "").toLowerCase();
+      link.removeAttribute("aria-current");
       if (href === page) {
         link.classList.add("active");
+        link.setAttribute("aria-current", "page");
       }
     });
   }
@@ -45,7 +52,7 @@
     mobileCta.innerHTML =
       '<a href="tel:02-2693-6123" aria-label="전화하기">전화하기</a>' +
       '<a href="https://blog.naver.com/sja6123" target="_blank" rel="noopener" aria-label="블로그 바로가기">블로그</a>' +
-      '<a href="https://naver.me/xrSMu90Z" target="_blank" rel="noopener" aria-label="오시는 길 보기">오시는 길</a>';
+      '<a href="contact.html" aria-label="상담 문의 페이지로 이동">상담 문의</a>';
     document.body.appendChild(mobileCta);
   }
 
@@ -143,7 +150,91 @@
     refreshScrollReveal();
   }
 
-  function setupBlogPosts() {
+  function toDateValue(value) {
+    if (!value) {
+      return null;
+    }
+    if (value instanceof Date) {
+      return value;
+    }
+    if (typeof value.toDate === "function") {
+      return value.toDate();
+    }
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function formatDateISO(value) {
+    const date = toDateValue(value);
+    if (!date) {
+      return "";
+    }
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+  }
+
+  async function loadBlogPostsFromFirestore(blogList) {
+    const firebaseModules = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
+      import("./firebase-config.js"),
+    ]);
+
+    const firebaseApp = firebaseModules[0];
+    const firestoreMod = firebaseModules[1];
+    const firebaseLocal = firebaseModules[2];
+
+    var appName = "sungjin-main-blog";
+    var app = firebaseApp.getApps().find(function (item) {
+      return item.name === appName;
+    });
+    if (!app) {
+      app = firebaseApp.initializeApp(firebaseLocal.firebaseConfig, appName);
+    }
+    const db = firestoreMod.getFirestore(app);
+    const postQuery = firestoreMod.query(
+      firestoreMod.collection(db, "posts"),
+      firestoreMod.where("category", "==", "blog"),
+      firestoreMod.limit(30)
+    );
+    const snap = await firestoreMod.getDocs(postQuery);
+
+    const posts = snap.docs
+      .map(function (docSnap) {
+        const data = docSnap.data() || {};
+        return {
+          title: data.title || "",
+          dateObj: toDateValue(data.publishedAt) || toDateValue(data.updatedAt) || toDateValue(data.createdAt),
+          link: data.blogLink || data.link || "#",
+          status: data.status || "",
+        };
+      })
+      .filter(function (post) {
+        return post.title && post.link && post.status === "published";
+      })
+      .sort(function (a, b) {
+        const at = a.dateObj ? a.dateObj.getTime() : 0;
+        const bt = b.dateObj ? b.dateObj.getTime() : 0;
+        return bt - at;
+      })
+      .slice(0, 5)
+      .map(function (post) {
+        return {
+          title: post.title,
+          date: formatDateISO(post.dateObj),
+          link: post.link,
+        };
+      });
+
+    if (!posts.length) {
+      throw new Error("Firestore blog data empty");
+    }
+    renderBlogPosts(blogList, posts);
+  }
+
+  function loadBlogPostsFromCSV() {
     const blogList = document.getElementById("blog-post-list");
     if (!blogList) {
       return;
@@ -157,39 +248,294 @@
       { title: "대입 정시 전략 상담 안내", date: "2025-12-27", link: "https://blog.naver.com/sja6123/224121520328" },
     ];
 
-    fetch("assets/data/blog_posts.csv")
-      .then(function (res) {
-        if (!res.ok) {
-          throw new Error("CSV 로딩 실패");
+    loadBlogPostsFromFirestore(blogList).catch(function () {
+      fetch("assets/data/blog_posts.csv")
+        .then(function (res) {
+          if (!res.ok) {
+            throw new Error("CSV 로딩 실패");
+          }
+          return res.text();
+        })
+        .then(function (csvText) {
+          const posts = normalizePosts(parseCsv(csvText));
+          if (!posts.length) {
+            throw new Error("CSV 데이터 비어 있음");
+          }
+          renderBlogPosts(blogList, posts);
+        })
+        .catch(function () {
+          fetch("assets/data/blog_posts.json")
+            .then(function (res) {
+              if (!res.ok) {
+                throw new Error("JSON 로딩 실패");
+              }
+              return res.json();
+            })
+            .then(function (posts) {
+              const normalized = normalizePosts(posts);
+              if (!normalized.length) {
+                throw new Error("JSON 데이터 비어 있음");
+              }
+              renderBlogPosts(blogList, normalized);
+            })
+            .catch(function () {
+              renderBlogPosts(blogList, fallbackPosts);
+            });
+        });
+    });
+  }
+
+  const WP_BASE = "/blog";
+  const WP_API = WP_BASE + "/wp-json/wp/v2";
+
+  function decodeEntities(html) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html || "";
+    return txt.value;
+  }
+
+  function stripHtml(html) {
+    if (!html) {
+      return "";
+    }
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
+  }
+
+  function trimText(text, maxLen) {
+    if (!text || text.length <= maxLen) {
+      return text || "";
+    }
+    return text.slice(0, maxLen).trim() + "...";
+  }
+
+  function formatDate(value) {
+    if (!value) {
+      return "";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+  }
+
+  function getFeaturedImage(post) {
+    const media = post && post._embedded && post._embedded["wp:featuredmedia"];
+    const first = media && media[0];
+    if (!first) {
+      return "";
+    }
+    const sizes = (first.media_details && first.media_details.sizes) || {};
+    return (
+      (sizes.medium && sizes.medium.source_url) ||
+      (sizes.thumbnail && sizes.thumbnail.source_url) ||
+      first.source_url ||
+      ""
+    );
+  }
+
+  async function getCategoryIdBySlug(slug) {
+    const res = await fetch(WP_API + "/categories?slug=" + encodeURIComponent(slug));
+    if (!res.ok) {
+      throw new Error("category fetch failed");
+    }
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length || !data[0].id) {
+      throw new Error("category not found");
+    }
+    return data[0].id;
+  }
+
+  async function getPostsByCategorySlug(slug, perPage) {
+    const catId = await getCategoryIdBySlug(slug);
+    const url =
+      WP_API +
+      "/posts?categories=" +
+      encodeURIComponent(catId) +
+      "&per_page=" +
+      encodeURIComponent(perPage) +
+      "&_embed=1&orderby=date&order=desc";
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error("post fetch failed");
+    }
+    return res.json();
+  }
+
+  function renderWpList(container, posts, options) {
+    const type = (options && options.type) || "notice";
+    container.innerHTML = "";
+
+    if (!Array.isArray(posts) || posts.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "wp-empty";
+      empty.textContent = "등록된 글이 없습니다.";
+      container.appendChild(empty);
+      refreshScrollReveal();
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    posts.forEach(function (post) {
+      const title = decodeEntities((post.title && post.title.rendered) || "제목 없음");
+      const excerpt = trimText(stripHtml(post.excerpt && post.excerpt.rendered), 120);
+      const dateText = formatDate(post.date);
+      const link = post.link || WP_BASE;
+      const imageUrl = getFeaturedImage(post);
+
+      if (type === "result") {
+        const card = document.createElement("article");
+        card.className = "case-card";
+        card.setAttribute("data-reveal", "up");
+
+        const media = document.createElement("div");
+        media.className = "media-box";
+        if (imageUrl) {
+          media.style.backgroundImage = 'url("' + imageUrl + '")';
+        } else {
+          media.classList.add("wp-placeholder");
+          media.innerHTML = '<span class="media-badge">이미지 없음</span>';
         }
-        return res.text();
-      })
-      .then(function (csvText) {
-        const posts = normalizePosts(parseCsv(csvText));
-        if (!posts.length) {
-          throw new Error("CSV 데이터 비어 있음");
+
+        const body = document.createElement("div");
+        body.className = "card-body";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = title;
+
+        const meta = document.createElement("p");
+        meta.className = "case-meta";
+        meta.textContent = dateText;
+
+        const p = document.createElement("p");
+        p.textContent = excerpt || "자세한 내용은 글에서 확인해주세요.";
+
+        const more = document.createElement("a");
+        more.className = "wp-post-link";
+        more.href = link;
+        more.textContent = "자세히 보기";
+
+        body.appendChild(h3);
+        body.appendChild(meta);
+        body.appendChild(p);
+        body.appendChild(more);
+        card.appendChild(media);
+        card.appendChild(body);
+        fragment.appendChild(card);
+        return;
+      }
+
+      if (type === "review" || type === "home-review") {
+        const card = document.createElement("article");
+        card.className = "testimonial-card";
+        card.setAttribute("data-reveal", "up");
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        if (imageUrl) {
+          avatar.style.backgroundImage = 'url("' + imageUrl + '")';
+        } else {
+          avatar.classList.add("wp-placeholder");
         }
-        renderBlogPosts(blogList, posts);
-      })
-      .catch(function () {
-        fetch("assets/data/blog_posts.json")
-          .then(function (res) {
-            if (!res.ok) {
-              throw new Error("JSON 로딩 실패");
-            }
-            return res.json();
-          })
-          .then(function (posts) {
-            const normalized = normalizePosts(posts);
-            if (!normalized.length) {
-              throw new Error("JSON 데이터 비어 있음");
-            }
-            renderBlogPosts(blogList, normalized);
-          })
-          .catch(function () {
-            renderBlogPosts(blogList, fallbackPosts);
-          });
-      });
+
+        const badge = document.createElement("span");
+        badge.className = "type-badge";
+        badge.textContent = "후기";
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "review-meta";
+        const reviewYear = (dateText || "").slice(0, 4);
+        if (reviewYear) {
+          const year = document.createElement("span");
+          year.className = "review-year";
+          year.textContent = reviewYear;
+          metaRow.appendChild(badge);
+          metaRow.appendChild(year);
+        } else {
+          metaRow.appendChild(badge);
+        }
+
+        const quote = document.createElement("p");
+        quote.className = "quote";
+        quote.textContent = excerpt || "자세한 내용은 글에서 확인해주세요.";
+
+        const linkEl = document.createElement("a");
+        linkEl.className = "wp-post-link";
+        linkEl.href = link;
+        linkEl.textContent = title;
+
+        card.appendChild(avatar);
+        card.appendChild(metaRow);
+        card.appendChild(quote);
+        card.appendChild(linkEl);
+        fragment.appendChild(card);
+        return;
+      }
+
+      const item = document.createElement("a");
+      item.className = "notice-item";
+      item.href = link;
+      item.setAttribute("data-reveal", "up");
+
+      const t = document.createElement("span");
+      t.textContent = title;
+      const d = document.createElement("span");
+      d.className = "notice-date";
+      d.textContent = dateText;
+
+      item.appendChild(t);
+      item.appendChild(d);
+      fragment.appendChild(item);
+    });
+
+    container.appendChild(fragment);
+    const existingError = container.querySelector(".wp-error--inline");
+    if (existingError) {
+      existingError.remove();
+    }
+    refreshScrollReveal();
+  }
+
+  async function loadWpPostsInto(container, slug, perPage, type) {
+    try {
+      const posts = await getPostsByCategorySlug(slug, perPage);
+      renderWpList(container, posts, { type: type });
+    } catch (err) {
+      console.warn("WP post load failed:", slug, err);
+    }
+  }
+
+  function initWpPostLists() {
+    try {
+      const noticeList = document.getElementById("wp-notice-list");
+      const resultList = document.getElementById("wp-result-list");
+      const reviewList = document.getElementById("wp-review-list");
+      const homeNotice = document.getElementById("wp-home-notice");
+      const homeReview = document.getElementById("wp-home-review");
+
+      if (noticeList) {
+        loadWpPostsInto(noticeList, "notice", 8, "notice");
+      }
+      if (resultList) {
+        loadWpPostsInto(resultList, "result", 6, "result");
+      }
+      if (reviewList) {
+        loadWpPostsInto(reviewList, "review", 4, "review");
+      }
+      if (homeNotice) {
+        loadWpPostsInto(homeNotice, "notice", 3, "notice");
+      }
+      if (homeReview) {
+        loadWpPostsInto(homeReview, "review", 4, "home-review");
+      }
+    } catch (err) {
+      console.warn("WP post list init failed", err);
+    }
   }
 
   function initMediaSlots() {
@@ -208,11 +554,12 @@
     });
   }
 
-  function setupHeroSliderFade() {
+  function setupHeroSlider() {
     const slider = document.querySelector(".hero-slider");
-    if (!slider) {
+    if (!slider || slider.dataset.bound === "true") {
       return;
     }
+    slider.dataset.bound = "true";
 
     const slides = slider.querySelectorAll(".hero-slide");
     const dots = slider.querySelectorAll(".hero-dots .dot");
@@ -290,16 +637,212 @@
       }, 0);
     });
 
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) {
-        stopAutoplay();
-      } else {
-        startAutoplay();
-      }
-    });
+    if (!visibilityListenerBound) {
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+          stopAutoplay();
+        } else {
+          startAutoplay();
+        }
+      });
+      visibilityListenerBound = true;
+    }
 
     goTo(0);
     startAutoplay();
+  }
+
+  function initGalleryLightbox() {
+    const lightbox = document.getElementById("sjLightbox");
+    const media = document.getElementById("sjLightboxMedia");
+    const caption = document.getElementById("sjLightboxCaption");
+    const items = Array.from(document.querySelectorAll(".sj-gallery-item[data-full]"));
+
+    if (!lightbox || !media || !caption || !items.length) {
+      return;
+    }
+
+    if (lightbox.dataset.bound === "true") {
+      return;
+    }
+    lightbox.dataset.bound = "true";
+
+    const closeBtn = lightbox.querySelector(".sj-lightbox__close");
+    const prevBtn = lightbox.querySelector("[data-prev]");
+    const nextBtn = lightbox.querySelector("[data-next]");
+    const closeEls = lightbox.querySelectorAll("[data-close]");
+    let activeIndex = 0;
+
+    function render(index) {
+      activeIndex = (index + items.length) % items.length;
+      const current = items[activeIndex];
+      const src = current.getAttribute("data-full") || "";
+      const text = current.getAttribute("data-caption") || "";
+      media.style.setProperty("--lb-media", 'url("' + src + '")');
+      caption.textContent = text;
+    }
+
+    function open(index) {
+      render(index);
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.classList.add("is-lightbox-open");
+      if (closeBtn) {
+        closeBtn.focus();
+      }
+    }
+
+    function close() {
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("is-lightbox-open");
+    }
+
+    function isOpen() {
+      return lightbox.getAttribute("aria-hidden") === "false";
+    }
+
+    items.forEach(function (item, idx) {
+      item.addEventListener("click", function () {
+        open(idx);
+      });
+    });
+
+    closeEls.forEach(function (el) {
+      el.addEventListener("click", close);
+    });
+
+    if (prevBtn) {
+      prevBtn.addEventListener("click", function () {
+        render(activeIndex - 1);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener("click", function () {
+        render(activeIndex + 1);
+      });
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (!isOpen()) {
+        return;
+      }
+      if (event.key === "Escape") {
+        close();
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        render(activeIndex - 1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        render(activeIndex + 1);
+      }
+    });
+  }
+
+  function initLightbox() {
+    const items = Array.from(document.querySelectorAll("[data-lightbox]"));
+    if (!items.length) {
+      return;
+    }
+
+    let lightbox = document.getElementById("sjLightbox");
+    if (!lightbox) {
+      lightbox = document.createElement("div");
+      lightbox.className = "sj-lightbox";
+      lightbox.id = "sjLightbox";
+      lightbox.setAttribute("aria-hidden", "true");
+      lightbox.innerHTML =
+        '<div class="sj-lightbox__backdrop" data-close></div>' +
+        '<div class="sj-lightbox__dialog" role="dialog" aria-modal="true" aria-label="사진 크게 보기">' +
+        '<button class="sj-lightbox__close" type="button" data-close aria-label="닫기">×</button>' +
+        '<button class="sj-lightbox__nav sj-lightbox__nav--prev" type="button" data-prev aria-label="이전">‹</button>' +
+        '<div class="sj-lightbox__media" id="sjLightboxMedia"></div>' +
+        '<button class="sj-lightbox__nav sj-lightbox__nav--next" type="button" data-next aria-label="다음">›</button>' +
+        '<div class="sj-lightbox__caption" id="sjLightboxCaption"></div>' +
+        "</div>";
+      document.body.appendChild(lightbox);
+    }
+
+    if (lightbox.dataset.lightboxBound === "true") {
+      return;
+    }
+    lightbox.dataset.lightboxBound = "true";
+
+    const media = lightbox.querySelector("#sjLightboxMedia");
+    const caption = lightbox.querySelector("#sjLightboxCaption");
+    const closeBtn = lightbox.querySelector(".sj-lightbox__close");
+    const prevBtn = lightbox.querySelector("[data-prev]");
+    const nextBtn = lightbox.querySelector("[data-next]");
+    const closeEls = lightbox.querySelectorAll("[data-close]");
+
+    if (!media || !caption) {
+      return;
+    }
+
+    let activeIndex = 0;
+
+    function render(index) {
+      activeIndex = (index + items.length) % items.length;
+      const current = items[activeIndex];
+      const src = current.getAttribute("data-lightbox") || "";
+      const text = current.getAttribute("data-caption") || "";
+      media.style.setProperty("--lb-media", 'url("' + src + '")');
+      caption.textContent = text;
+    }
+
+    function open(index) {
+      render(index);
+      lightbox.setAttribute("aria-hidden", "false");
+      document.body.classList.add("is-lightbox-open");
+      if (closeBtn) {
+        closeBtn.focus();
+      }
+    }
+
+    function close() {
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("is-lightbox-open");
+    }
+
+    function isOpen() {
+      return lightbox.getAttribute("aria-hidden") === "false";
+    }
+
+    items.forEach(function (item, idx) {
+      item.addEventListener("click", function () {
+        open(idx);
+      });
+    });
+
+    closeEls.forEach(function (el) {
+      el.addEventListener("click", close);
+    });
+
+    if (prevBtn) {
+      prevBtn.addEventListener("click", function () {
+        render(activeIndex - 1);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener("click", function () {
+        render(activeIndex + 1);
+      });
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (!isOpen()) {
+        return;
+      }
+      if (event.key === "Escape") {
+        close();
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        render(activeIndex - 1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        render(activeIndex + 1);
+      }
+    });
   }
 
   function applyRevealVariant(el) {
@@ -326,6 +869,8 @@
       ".case-grid .case-card",
       ".testimonials-row .testimonial-card",
       ".gallery-grid .gallery-item",
+      ".sj-gallery-grid .sj-gallery-item",
+      ".sj-gallery-item--featured",
       ".teachers-grid .teacher-card",
       ".tuition-grid .tuition-card",
       ".faq-list .faq-item",
@@ -410,12 +955,24 @@
   }
 
   function init() {
-    setupMobileNav();
+    if (initialized) {
+      return;
+    }
+    initialized = true;
+
+    initNavToggle();
     markActiveMenu();
     setupMobileCtaBar();
-    setupBlogPosts();
+    loadBlogPostsFromCSV();
+    try {
+      initWpPostLists();
+    } catch (err) {
+      console.warn("WP post list init failed", err);
+    }
     initMediaSlots();
-    setupHeroSliderFade();
+    setupHeroSlider();
+    initLightbox();
+    initGalleryLightbox();
     initScrollReveal();
   }
 
