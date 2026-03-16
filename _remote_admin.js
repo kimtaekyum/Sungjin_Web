@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -32,16 +32,16 @@ const MAX_INLINE_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024;
 const PREVIEW_MODE = false;
 const CATEGORY_LABEL = {
-  notice: "공지사항",
-  result: "성과 사례",
-  review: "후기",
-  blog: "블로그 소식"
+  notice: "공�??�항",
+  result: "?�과 ?��?",
+  review: "?�기",
+  blog: "블로�??�식"
 };
 
 const FIREBASE_CONFIG_ERROR_MESSAGE =
-  "Firebase 설정이 비어있습니다. Firebase 콘솔 > 프로젝트 설정 > 웹 앱 > SDK 설정에서 firebaseConfig를 복사해 assets/js/firebase-config.js에 붙여넣으세요.";
+  "Firebase ?�정??비어?�습?�다. Firebase 콘솔 ???�로?�트 ?�정 ????????SDK ?�정?�서 firebaseConfig�?복사??assets/js/firebase-config.js??붙여?�으?�요.";
 const FIREBASE_CONFIG_IMPORT_ERROR_MESSAGE =
-  "firebase-config.js에서 firebaseConfig export가 없습니다. assets/js/firebase-config.js에 `export const firebaseConfig = { ... }` 형태로 설정하세요.";
+  "firebase-config.js?�서 firebaseConfig export가 ?�습?�다. assets/js/firebase-config.js??`export const firebaseConfig = { ... }` ?�태�??�정?�세??";
 const FIREBASE_REQUIRED_KEYS = [
   "apiKey",
   "authDomain",
@@ -240,7 +240,7 @@ function initAuthListener() {
     state.isAdmin = true;
     state.posts = getPreviewPosts();
     showDashboardView();
-    setStatus(els.globalStatus, "미리보기 모드입니다. 실제 업로드는 동작하지 않습니다.");
+    setStatus(els.globalStatus, "미리보기 모드?�니?? ?�제 ?�???�로?�는 ?�작?��? ?�습?�다.");
     renderPostsTable();
     return;
   }
@@ -251,7 +251,7 @@ function initAuthListener() {
     setStatus(els.globalStatus, configErrorMessage, true);
     if (els.loginBtn) {
       els.loginBtn.disabled = true;
-      els.loginBtn.title = "Firebase 설정 후 로그인이 가능합니다.";
+      els.loginBtn.title = "Firebase ?�정 ??로그??가?�합?�다.";
     }
     return;
   }
@@ -262,7 +262,7 @@ function initAuthListener() {
       state.isAdmin = false;
       state.posts = [];
       showAuthView();
-      setStatus(els.globalStatus, "로그인이 필요합니다.");
+      setStatus(els.globalStatus, "로그?�이 ?�요?�니??");
       return;
     }
 
@@ -273,19 +273,19 @@ function initAuthListener() {
 
       if (!isActiveAdmin) {
         await signOut(auth);
-        setStatus(els.authMessage, "권한이 없습니다. 관리자에게 문의하세요.", true);
-        setStatus(els.globalStatus, "권한 없는 계정으로 로그인 시도되었습니다.", true);
+        setStatus(els.authMessage, "권한???�습?�다. 관리자?�게 문의?�세??", true);
+        setStatus(els.globalStatus, "권한???�는 계정?�로 로그???�도?�었?�니??", true);
         return;
       }
 
       state.user = user;
       state.isAdmin = true;
       showDashboardView();
-      setStatus(els.globalStatus, `${user.email} 계정으로 로그인했습니다.`);
+      setStatus(els.globalStatus, `${user.email} 계정?�로 로그?�했?�니??`);
       await fetchPosts();
     } catch (error) {
       console.warn("[admin] auth/admin check failed", error);
-      setStatus(els.authMessage, "인증 확인 중 오류가 발생했습니다. 다시 시도하세요.", true);
+      setStatus(els.authMessage, "?�증 ?�인 �??�류가 발생?�습?�다. ?�시 ?�도?�세??", true);
       await signOut(auth);
     }
   });
@@ -305,7 +305,7 @@ async function handleLogin(event) {
     return;
   }
   if (PREVIEW_MODE) {
-    setStatus(els.authMessage, "미리보기 모드에서는 로그인이 필요하지 않습니다.");
+    setStatus(els.authMessage, "미리보기 모드?�서??로그?�이 ?�요?��? ?�습?�다.");
     return;
   }
   const formData = new FormData(els.loginForm);
@@ -313,7 +313,7 @@ async function handleLogin(event) {
   const password = String(formData.get("password") || "");
 
   if (!email || !password) {
-    setStatus(els.authMessage, "이메일과 비밀번호를 모두 입력하세요.", true);
+    setStatus(els.authMessage, "?�메?�과 비�?번호�?모두 ?�력?�세??", true);
     return;
   }
 
@@ -322,12 +322,12 @@ async function handleLogin(event) {
       authEndpointKeyHint: maskApiKey(firebaseConfig.apiKey),
       configReady: firebaseConfigReady
     });
-    setStatus(els.authMessage, "로그인 중입니다...");
+    setStatus(els.authMessage, "로그??중입?�다...");
     await signInWithEmailAndPassword(auth, email, password);
     els.loginForm.reset();
   } catch (error) {
     console.warn("[admin] login failed", error);
-    setStatus(els.authMessage, "로그인에 실패했습니다. 계정을 확인하세요.", true);
+    setStatus(els.authMessage, "로그?�에 ?�패?�습?�다. 계정???�인?�세??", true);
   }
 }
 
@@ -338,10 +338,10 @@ async function handleLogout() {
   }
   try {
     await signOut(auth);
-    setStatus(els.globalStatus, "로그아웃되었습니다.");
+    setStatus(els.globalStatus, "로그?�웃?�었?�니??");
   } catch (error) {
     console.warn("[admin] logout failed", error);
-    setStatus(els.globalStatus, "로그아웃 중 오류가 발생했습니다.", true);
+    setStatus(els.globalStatus, "로그?�웃 �??�류가 발생?�습?�다.", true);
   }
 }
 
@@ -387,7 +387,7 @@ async function fetchPosts() {
     renderPostsTable();
   } catch (error) {
     console.warn("[admin] fetch posts failed", error);
-    setStatus(els.globalStatus, "글 목록을 불러오지 못했습니다. 네트워크를 확인하세요.", true);
+    setStatus(els.globalStatus, "글 목록??불러?��? 못했?�니?? ?�트?�크�??�인?�세??", true);
   }
 }
 
@@ -411,7 +411,7 @@ function renderPostsTable() {
   });
 
   if (!filtered.length) {
-    els.postsTableBody.innerHTML = "<tr><td colspan='5'>조건에 맞는 글이 없습니다.</td></tr>";
+    els.postsTableBody.innerHTML = "<tr><td colspan='5'>조건??맞는 글???�습?�다.</td></tr>";
     return;
   }
 
@@ -422,14 +422,14 @@ function renderPostsTable() {
       const dateText = formatDate(post.publishedAt || post.updatedAt || post.createdAt);
       const actions =
         type === "blog"
-          ? `<button class="btn btn-secondary" type="button" data-action="delete" data-id="${post.id}">삭제</button>`
+          ? `<button class="btn btn-secondary" type="button" data-action="delete" data-id="${post.id}">??��</button>`
           : `
-              <button class="btn btn-secondary" type="button" data-action="edit" data-id="${post.id}">수정</button>
-              <button class="btn btn-secondary" type="button" data-action="delete" data-id="${post.id}">삭제</button>
+              <button class="btn btn-secondary" type="button" data-action="edit" data-id="${post.id}">?�정</button>
+              <button class="btn btn-secondary" type="button" data-action="delete" data-id="${post.id}">??��</button>
             `;
       return `
         <tr>
-          <td>${escapeHtml(post.title || "(제목 없음)")}</td>
+          <td>${escapeHtml(post.title || "(?�목 ?�음)")}</td>
           <td>${escapeHtml(getCategoryLabel(type))}</td>
           <td>${escapeHtml(getStatusLabel(postStatus))}</td>
           <td>${escapeHtml(dateText)}</td>
@@ -489,7 +489,7 @@ function openEditor(post = null) {
   state.newAttachments = [];
   state.removedAttachmentPaths = [];
   els.postForm.hidden = false;
-  els.formTitle.textContent = post ? "글 수정" : "글 작성";
+  els.formTitle.textContent = post ? "글 ?�정" : "글 ?�성";
   els.postId.value = post?.id || "";
   els.title.value = post?.title || "";
   els.postStatus.value = post ? (post.status === "draft" ? "draft" : "published") : "draft";
@@ -538,7 +538,7 @@ function closeEditor() {
   state.removedAttachmentPaths = [];
   els.postForm.hidden = false;
   els.postForm.reset();
-  els.formTitle.textContent = "글 작성";
+  els.formTitle.textContent = "글 ?�성";
   els.postId.value = "";
   els.postStatus.value = "draft";
   els.coverImageFile.value = "";
@@ -551,7 +551,7 @@ function closeEditor() {
   els.reviewText.value = "";
   els.reviewProfileFile.value = "";
   els.reviewProfilePreview.style.backgroundImage = "";
-  els.reviewProfilePreview.textContent = "사진";
+  els.reviewProfilePreview.textContent = "?�진";
   setEditorContent("");
   els.attachmentList.innerHTML = "";
   els.attachmentFiles.value = "";
@@ -566,7 +566,7 @@ function closeEditor() {
 function syncEditorModeByCategory(category) {
   const isResult = category === "result";
   const isReview = category === "review";
-  els.editorCategoryText.textContent = `작성 카테고리: ${getCategoryLabel(category)}`;
+  els.editorCategoryText.textContent = `?�성 카테고리: ${getCategoryLabel(category)}`;
   els.resultCaseFields.hidden = !isResult;
   els.reviewFields.hidden = !isReview;
   els.standardContentFields.hidden = isResult || isReview;
@@ -605,12 +605,12 @@ function renderCoverImagePreview() {
   const selected = els.coverImageFile.files?.[0] || null;
   if (selected) {
     if (!selected.type.startsWith("image/")) {
-      setStatus(els.formMessage, "대표 이미지는 이미지 파일만 업로드할 수 있습니다.", true);
+      setStatus(els.formMessage, "?�???��?지???��?지 ?�일�??�로?�할 ???�습?�다.", true);
       els.coverImageFile.value = "";
       return;
     }
     if (selected.size > MAX_INLINE_IMAGE_SIZE) {
-      setStatus(els.formMessage, "대표 이미지는 5MB 이하만 업로드할 수 있습니다.", true);
+      setStatus(els.formMessage, "?�???��?지??5MB ?�하�??�로?�할 ???�습?�다.", true);
       els.coverImageFile.value = "";
       return;
     }
@@ -628,14 +628,14 @@ function renderCoverImagePreview() {
   if (state.coverImage?.url) {
     html.push(`
       <div class="preview-item">
-        <img src="${state.coverImage.url}" alt="기존 대표 이미지">
+        <img src="${state.coverImage.url}" alt="기존 ?�???��?지">
       </div>
     `);
   }
   if (state.coverImageTempUrl) {
     html.push(`
       <div class="preview-item">
-        <img src="${state.coverImageTempUrl}" alt="업로드 이미지 미리보기">
+        <img src="${state.coverImageTempUrl}" alt="???�???��?지 미리보기">
       </div>
     `);
   }
@@ -645,12 +645,12 @@ function renderResultImagePreview() {
   const selected = els.resultImageFile.files?.[0] || null;
   if (selected) {
     if (!selected.type.startsWith("image/")) {
-      setStatus(els.formMessage, "성과 사례 사진은 이미지 파일이 필요합니다.", true);
+      setStatus(els.formMessage, "?�과 ?��? ?�진?� ?��?지 ?�일�?가?�합?�다.", true);
       els.resultImageFile.value = "";
       return;
     }
     if (selected.size > MAX_INLINE_IMAGE_SIZE) {
-      setStatus(els.formMessage, "성과 사례 사진은 5MB 이하만 가능합니다.", true);
+      setStatus(els.formMessage, "?�과 ?��? ?�진?� 5MB ?�하�?가?�합?�다.", true);
       els.resultImageFile.value = "";
       return;
     }
@@ -659,7 +659,7 @@ function renderResultImagePreview() {
   if (state.resultImage?.url) {
     html.push(`
       <div class="preview-item">
-        <img src="${state.resultImage.url}" alt="기존 성과 사례 사진">
+        <img src="${state.resultImage.url}" alt="기존 ?�과 ?��? ?�진">
       </div>
     `);
   }
@@ -667,7 +667,7 @@ function renderResultImagePreview() {
     const tempUrl = URL.createObjectURL(selected);
     html.push(`
       <div class="preview-item">
-        <img src="${tempUrl}" alt="업로드 성과 사례 사진 미리보기">
+        <img src="${tempUrl}" alt="???�과 ?��? ?�진 미리보기">
       </div>
     `);
   }
@@ -687,23 +687,22 @@ function renderReviewProfilePreview() {
     els.reviewProfilePreview.textContent = "";
   } else {
     els.reviewProfilePreview.style.backgroundImage = "";
-    els.reviewProfilePreview.textContent = "사진";
+    els.reviewProfilePreview.textContent = "?�진";
   }
 }
 
 async function handleReviewProfileSelect(event) {
   const file = event.target.files?.[0];
   if (!file) {
-    setStatus(els.formMessage, "프로필 이미지를 선택해 주세요", true);
     return;
   }
   if (!file.type.startsWith("image/")) {
-    setStatus(els.formMessage, "후기 프로필은 이미지 파일이 필요합니다.", true);
+    setStatus(els.formMessage, "?�기 ?�로?��? ?��?지 ?�일�?가?�합?�다.", true);
     els.reviewProfileFile.value = "";
     return;
   }
   if (file.size > MAX_INLINE_IMAGE_SIZE) {
-    setStatus(els.formMessage, "후기 프로필 이미지는 5MB 이하만 가능합니다.", true);
+    setStatus(els.formMessage, "?�기 ?�로???��?지??5MB ?�하�?가?�합?�다.", true);
     els.reviewProfileFile.value = "";
     return;
   }
@@ -723,10 +722,10 @@ async function handleReviewProfileSelect(event) {
       url: previewUrl,
     };
     renderReviewProfilePreview();
-    setStatus(els.formMessage, "프로필 사진 영역이 적용되었습니다.");
+    setStatus(els.formMessage, "?�로???�진 ?�역???�용?�었?�니??");
   } catch (error) {
-    logAdminError("review_profile_crop", error);
-    setStatus(els.formMessage, "프로필 사진 적용에 실패했습니다.", true);
+    console.warn("[admin] review profile crop failed", error);
+    setStatus(els.formMessage, "?�로???�진 ?�용???�패?�습?�다.", true);
   } finally {
     els.reviewProfileFile.value = "";
   }
@@ -816,16 +815,9 @@ function applyImageCrop() {
       closeImageCropModal(null);
       return;
     }
-    const generatedName = buildSafeFilename(`review-${Date.now()}.png`);
-    let outputFile = blob;
-    try {
-      outputFile = new File([blob], generatedName, { type: blob.type || "image/png" });
-    } catch (error) {
-      console.warn("[admin] failed to wrap cropped blob as File", error);
-    }
     closeImageCropModal({
-      blob: outputFile,
-      name: outputFile.name || generatedName,
+      blob,
+      name: `review-profile-${Date.now()}.jpg`,
     });
   }, "image/jpeg", 0.92);
 }
@@ -899,24 +891,24 @@ function renderBlogSlots() {
       if (post) {
         return `
           <article class="blog-slot-card" data-slot="${slotNo}">
-            <span class="blog-slot-label">슬롯 ${slotNo}</span>
-            <p class="blog-slot-title">${escapeHtml(post.title || "(제목 없음)")}</p>
+            <span class="blog-slot-label">?�롯 ${slotNo}</span>
+            <p class="blog-slot-title">${escapeHtml(post.title || "(?�목 ?�음)")}</p>
             <a class="blog-slot-link" href="${escapeHtml(post.blogLink || "#")}" target="_blank" rel="noopener">${escapeHtml(post.blogLink || "-")}</a>
             <div class="blog-slot-actions">
-              <button type="button" class="btn btn-secondary" data-action="blog-delete" data-id="${post.id}" data-slot="${slotNo}">삭제 후 비우기</button>
+              <button type="button" class="btn btn-secondary" data-action="blog-delete" data-id="${post.id}" data-slot="${slotNo}">??�� ??비우�?/button>
             </div>
           </article>
         `;
       }
       return `
         <article class="blog-slot-card is-empty" data-slot="${slotNo}">
-          <span class="blog-slot-label">슬롯 ${slotNo} (비어 있음)</span>
+          <span class="blog-slot-label">?�롯 ${slotNo} (비어 ?�음)</span>
           <div class="blog-slot-inputs">
-            <input type="text" class="slot-title" placeholder="블로그 글 제목" maxlength="120">
+            <input type="text" class="slot-title" placeholder="블로�?글 ?�목" maxlength="120">
             <input type="url" class="slot-link" placeholder="https://blog.naver.com/...">
           </div>
           <div class="blog-slot-actions">
-            <button type="button" class="btn btn-primary" data-action="blog-add" data-slot="${slotNo}">등록</button>
+            <button type="button" class="btn btn-primary" data-action="blog-add" data-slot="${slotNo}">?�록</button>
           </div>
         </article>
       `;
@@ -924,7 +916,7 @@ function renderBlogSlots() {
     .join("");
 
   els.blogSlotsGrid.innerHTML = html;
-  setStatus(els.blogSlotsMessage, "슬롯을 변경한 경우 삭제 후 원하는 슬롯에 다시 등록하세요.");
+  setStatus(els.blogSlotsMessage, "?�롯??�?경우 ??�� ??�??�롯???�시 ?�록?�세??");
 }
 
 async function handleBlogSlotAction(event) {
@@ -966,27 +958,27 @@ async function handleBlogSlotAction(event) {
   const blogLink = String(linkInput?.value || "").trim();
 
   if (!title) {
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}: 제목을 입력하세요.`, true);
+    setStatus(els.blogSlotsMessage, `?�롯 ${slotNo}: ?�목???�력?�세??`, true);
     return;
   }
   if (!isValidUrl(blogLink)) {
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}: URL 형식을 확인하세요.`, true);
+    setStatus(els.blogSlotsMessage, `?�롯 ${slotNo}: URL ?�식???�인?�세??`, true);
     return;
   }
   if (getBlogPostsForSlots()[slotNo - 1]) {
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}은 이미 사용 중입니다. 삭제 후 다시 등록하세요.`, true);
+    setStatus(els.blogSlotsMessage, `?�롯 ${slotNo}???��? ?�용 중입?�다. ??�� ???�시 ?�록?�세??`, true);
     return;
   }
 
   try {
     target.disabled = true;
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo} 저장 중입니다...`);
+    setStatus(els.blogSlotsMessage, `?�롯 ${slotNo} ?�??중입?�다...`);
     await createBlogPostForSlot(slotNo, title, blogLink);
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}에 등록되었습니다.`);
+    setStatus(els.blogSlotsMessage, `?�롯 ${slotNo}???�록?�었?�니??`);
     await fetchPosts();
   } catch (error) {
     console.warn("[admin] blog slot save failed", error);
-    setStatus(els.blogSlotsMessage, "슬롯 저장에 실패했습니다. 다시 시도하세요.", true);
+    setStatus(els.blogSlotsMessage, "?�롯 ?�?�에 ?�패?�습?�다. ?�시 ?�도?�세??", true);
   } finally {
     target.disabled = false;
   }
@@ -1018,7 +1010,7 @@ async function createBlogPostForSlot(slotNo, title, blogLink) {
     return;
   }
   if (!state.isAdmin || !state.user) {
-    throw new Error("관리자 인증이 필요합니다.");
+    throw new Error("관리자 ?�증???�요?�니??");
   }
 
   const postRef = doc(collection(db, "posts"));
@@ -1061,7 +1053,7 @@ function initRichEditor() {
   quillReadyPromise = Promise.resolve().then(() => {
     quillEditor = new window.Quill("#contentEditor", {
       theme: "snow",
-      placeholder: "본문을 입력하세요.",
+      placeholder: "본문???�력?�세??",
       modules: {
         toolbar: [
           [{ header: [1, 2, 3, false] }],
@@ -1123,11 +1115,11 @@ function handleQuillImageInsert() {
       return;
     }
     if (!file.type.startsWith("image/")) {
-      setStatus(els.formMessage, "이미지 파일만 삽입할 수 있습니다.", true);
+      setStatus(els.formMessage, "?��?지 ?�일�??�입?????�습?�다.", true);
       return;
     }
     if (file.size > MAX_INLINE_IMAGE_SIZE) {
-      setStatus(els.formMessage, "본문 이미지는 5MB 이하만 가능합니다.", true);
+      setStatus(els.formMessage, "본문 ?��?지??5MB ?�하�?가?�합?�다.", true);
       return;
     }
 
@@ -1137,7 +1129,7 @@ function handleQuillImageInsert() {
         imageUrl = URL.createObjectURL(file);
       } else {
         const postId = ensureEditorPostId();
-        const path = `posts/${postId}/inline/${buildSafeFilename(resolveUploadFilename(file, "file"))}`;
+        const path = `posts/${postId}/inline/${buildSafeFilename(file.name || "inline-image.png")}`;
         const uploaded = await uploadAttachmentFile(file, path, (percent) => showProgress(els.attachmentProgress, percent));
         imageUrl = uploaded.url;
       }
@@ -1150,12 +1142,12 @@ function handleQuillImageInsert() {
       quillEditor.insertEmbed(index, "image", imageUrl, "user");
       quillEditor.setSelection(index + 1, 0, "silent");
       els.content.value = sanitizeHtml(quillEditor.root.innerHTML);
-      setStatus(els.formMessage, "본문에 이미지가 삽입되었습니다.");
+      setStatus(els.formMessage, "본문???��?지가 ?�입?�었?�니??");
     } catch (error) {
       console.warn("[admin] quill image insert failed", error);
       const message = isStorageUploadError(error)
         ? buildStorageUploadErrorMessage(error)
-        : "이미지 삽입에 실패했습니다.";
+        : "�̹��� ���Կ� �����߽��ϴ�.";
       setStatus(els.formMessage, message, true);
     } finally {
       resetProgress(els.attachmentProgress);
@@ -1179,7 +1171,7 @@ function handleAttachmentSelect() {
     }));
     state.newAttachments = [...state.newAttachments, ...mapped];
     renderAttachmentList();
-    setStatus(els.formMessage, "첨부파일이 추가되었습니다.");
+    setStatus(els.formMessage, "첨�??�일??추�??�었?�니??");
   } catch (error) {
     setStatus(els.formMessage, error.message, true);
   } finally {
@@ -1219,11 +1211,11 @@ function handleAttachmentRemove(event) {
 function renderAttachmentList() {
   const existingHtml = state.attachments
     .map((item, idx) => {
-      const name = item.name || item.path || `첨부파일 ${idx + 1}`;
+      const name = item.name || item.path || `첨�??�일 ${idx + 1}`;
       return `
         <div class="attachment-item">
           <span>${escapeHtml(name)}</span>
-          <button type="button" data-type="existing" data-index="${idx}">삭제</button>
+          <button type="button" data-type="existing" data-index="${idx}">??��</button>
         </div>
       `;
     })
@@ -1231,7 +1223,7 @@ function renderAttachmentList() {
 
   const newHtml = state.newAttachments
     .map((item, idx) => {
-      const name = `${item.name} (새로 추가)`;
+      const name = `${item.name} (?�로???�정)`;
       return `
         <div class="attachment-item">
           <span>${escapeHtml(name)}</span>
@@ -1242,14 +1234,14 @@ function renderAttachmentList() {
     .join("");
 
   const html = existingHtml + newHtml;
-  els.attachmentList.innerHTML = html || "<p class='status'>첨부파일 없음</p>";
+  els.attachmentList.innerHTML = html || "<p class='status'>첨�??�일 ?�음</p>";
 }
 
 async function savePost(event) {
   event.preventDefault();
   const category = getActiveEditorCategory();
   if (!category) {
-    setStatus(els.formMessage, "상단 카테고리에서 공지사항/성과 사례/후기를 선택하세요.", true);
+    setStatus(els.formMessage, "?�단 카테고리?�서 공�??�항/?�과 ?��?/?�기�??�택?�세??", true);
     return;
   }
 
@@ -1270,43 +1262,43 @@ async function savePost(event) {
   const excerpt = buildExcerpt(isResult ? els.resultSummary.value.trim() : isReview ? els.reviewText.value.trim() : contentHtml);
 
   if (!title) {
-    setStatus(els.formMessage, "제목은 필수입니다.", true);
+    setStatus(els.formMessage, "?�목?� ?�수?�니??", true);
     return;
   }
   if (!ALLOWED_TYPES.has(category)) {
-    setStatus(els.formMessage, "허용되지 않은 타입입니다.", true);
+    setStatus(els.formMessage, "?�용?��? ?��? ?�?�입?�다.", true);
     return;
   }
   if (isResult) {
     if (title.length > 30) {
-      setStatus(els.formMessage, "성과 사례 제목은 30자 이내여야 합니다.", true);
+      setStatus(els.formMessage, "?�과 ?��? ?�목?� 30???�내?�야 ?�니??", true);
       return;
     }
     if (!els.resultDate.value) {
-      setStatus(els.formMessage, "성과 사례 날짜를 입력하세요.", true);
+      setStatus(els.formMessage, "?�과 ?��? ?�짜�??�력?�세??", true);
       return;
     }
     if (!els.resultSummary.value.trim()) {
-      setStatus(els.formMessage, "성과 사례 내용을 입력하세요.", true);
+      setStatus(els.formMessage, "?�과 ?��? ?�용???�력?�세??", true);
       return;
     }
   }
   if (isReview) {
     if (!els.reviewYear.value) {
-      setStatus(els.formMessage, "후기 연도를 선택하세요.", true);
+      setStatus(els.formMessage, "?�기 ?�도�??�택?�세??", true);
       return;
     }
     if (!els.reviewText.value.trim()) {
-      setStatus(els.formMessage, "후기 내용을 입력하세요.", true);
+      setStatus(els.formMessage, "?�기 ?�용???�력?�세??", true);
       return;
     }
     if (els.reviewText.value.trim().length > 40) {
-      setStatus(els.formMessage, "후기 내용은 40자 이내여야 합니다.", true);
+      setStatus(els.formMessage, "?�기 ?�용?� 40???�내?�야 ?�니??", true);
       return;
     }
   }
   if (!toPlainText(contentHtml)) {
-    setStatus(els.formMessage, "본문은 필수입니다.", true);
+    setStatus(els.formMessage, "본문?� ?�수?�니??", true);
     return;
   }
 
@@ -1314,11 +1306,6 @@ async function savePost(event) {
   const resultImageFile = category === "result" ? (els.resultImageFile.files?.[0] || null) : null;
   const reviewProfileFile = category === "review" ? (state.reviewProfileDraft?.file || null) : null;
   const newFiles = category === "result" || category === "review" ? [] : state.newAttachments.map((item) => item.file);
-
-  if (isReview && !reviewProfileFile && !state.reviewProfileImage) {
-    setStatus(els.formMessage, "후기 이미지 또는 프로필 이미지를 선택해 주세요", true);
-    return;
-  }
 
   if (PREVIEW_MODE) {
     const now = new Date();
@@ -1372,14 +1359,14 @@ async function savePost(event) {
     });
 
     state.posts = [post, ...state.posts.filter((item) => item.id !== id)];
-    setStatus(els.formMessage, "미리보기 모드: 로컬에서만 저장됩니다.");
+    setStatus(els.formMessage, "미리보기 모드: 로컬?�서�??�?�되?�습?�다.");
     closeEditor();
     renderPostsTable();
     return;
   }
 
   if (!state.isAdmin || !state.user) {
-    setStatus(els.formMessage, "관리자 인증이 필요합니다.", true);
+    setStatus(els.formMessage, "관리자 ?�증???�요?�니??", true);
     return;
   }
 
@@ -1389,12 +1376,12 @@ async function savePost(event) {
   let saveStage = "start";
 
   try {
-    setStatus(els.formMessage, "저장 중입니다...");
+    setStatus(els.formMessage, "?�??중입?�다...");
 
     let uploadedCover = state.coverImage || null;
     saveStage = "storage_cover";
     if (coverImageFile) {
-      const coverPath = `posts/${postId}/cover/${buildSafeFilename(resolveUploadFilename(coverImageFile, "file"))}`;
+      const coverPath = `posts/${postId}/cover/${buildSafeFilename(coverImageFile.name)}`;
       uploadedCover = await uploadAttachmentFile(coverImageFile, coverPath, (percent) => showProgress(els.coverImageProgress, percent));
       if (state.coverImage?.path && state.coverImage.path !== uploadedCover.path) {
         await safeDeleteFile(state.coverImage.path);
@@ -1404,7 +1391,7 @@ async function savePost(event) {
     let uploadedResultImage = state.resultImage || null;
     saveStage = "storage_result";
     if (resultImageFile) {
-      const path = `posts/${postId}/result/${buildSafeFilename(resolveUploadFilename(resultImageFile, "file"))}`;
+      const path = `posts/${postId}/result/${buildSafeFilename(resultImageFile.name)}`;
       uploadedResultImage = await uploadAttachmentFile(resultImageFile, path, (percent) => showProgress(els.resultImageProgress, percent));
       if (state.resultImage?.path && state.resultImage.path !== uploadedResultImage.path) {
         await safeDeleteFile(state.resultImage.path);
@@ -1413,14 +1400,8 @@ async function savePost(event) {
 
     let uploadedReviewProfile = state.reviewProfileImage || null;
     saveStage = "storage_review";
-    if (isReview && !reviewProfileFile && !uploadedReviewProfile) {
-      setStatus(els.formMessage, "프로필 이미지를 선택해 주세요", true);
-      return;
-    }
     if (reviewProfileFile) {
-      const originalName = resolveUploadFilename(reviewProfileFile, "file");
-      const safeName = buildSafeFilename(originalName);
-      const path = `posts/${postId}/review/${Date.now()}-${safeName}`;
+      const path = `posts/${postId}/review/${buildSafeFilename(reviewProfileFile.name)}`;
       uploadedReviewProfile = await uploadAttachmentFile(reviewProfileFile, path, (percent) => showProgress(els.reviewProfileProgress, percent));
       if (state.reviewProfileImage?.path && state.reviewProfileImage.path !== uploadedReviewProfile.path) {
         await safeDeleteFile(state.reviewProfileImage.path);
@@ -1473,14 +1454,14 @@ async function savePost(event) {
       await setDoc(postRef, payload);
     }
 
-    setStatus(els.formMessage, "저장되었습니다.");
+    setStatus(els.formMessage, "?�?�되?�습?�다.");
     closeEditor();
     await fetchPosts();
   } catch (error) {
-    logAdminError(saveStage, error);
+    console.warn("[admin] save post failed", { stage: saveStage, code: error?.code || "unknown", error: error });
     const message = isStorageUploadError(error)
       ? buildStorageUploadErrorMessage(error)
-      : "저장에 실패했습니다. 네트워크 상태를 확인하세요.";
+      : "���忡 �����߽��ϴ�. ��Ʈ��ũ ���¸� Ȯ���ϼ���.";
     setStatus(els.formMessage, message, true);
   } finally {
     resetProgress(els.attachmentProgress);
@@ -1493,7 +1474,7 @@ async function uploadAttachmentFiles(postId, files) {
   showProgress(els.attachmentProgress, 0);
   const progresses = new Array(files.length).fill(0);
   const uploads = files.map((file, index) => {
-    const storagePath = `posts/${postId}/attachments/${buildSafeFilename(resolveUploadFilename(file, "file"))}`;
+    const storagePath = `posts/${postId}/attachments/${buildSafeFilename(file.name)}`;
     return uploadAttachmentFile(file, storagePath, (percent) => {
       progresses[index] = percent;
       const avg = progresses.reduce((sum, value) => sum + value, 0) / progresses.length;
@@ -1537,19 +1518,19 @@ function uploadAttachmentFile(file, storagePath, onProgress) {
 
 async function deletePost(post) {
   if (PREVIEW_MODE) {
-    const okPreview = window.confirm(`'${post.title || "제목 없음"}' 글을 삭제하시겠습니까? (미리보기 모드)`);
+    const okPreview = window.confirm(`'${post.title || "?�목 ?�음"}' 글????��?�시겠습?�까? (미리보기 모드)`);
     if (!okPreview) {
       return;
     }
     state.posts = state.posts.filter((item) => item.id !== post.id);
-    setStatus(els.globalStatus, "미리보기 모드: 로컬 목록에서 삭제되었습니다.");
+    setStatus(els.globalStatus, "미리보기 모드: 로컬 목록?�서 ??��?�었?�니??");
     renderPostsTable();
     return;
   }
   if (!state.isAdmin) {
     return;
   }
-  const ok = window.confirm(`'${post.title || "제목 없음"}' 글을 삭제하시겠습니까?`);
+  const ok = window.confirm(`'${post.title || "?�목 ?�음"}' 글????��?�시겠습?�까?`);
   if (!ok) {
     return;
   }
@@ -1576,11 +1557,11 @@ async function deletePost(post) {
     }
     await Promise.all([...paths].map((path) => safeDeleteFile(path)));
     await deleteDoc(doc(db, "posts", post.id));
-    setStatus(els.globalStatus, "글이 삭제되었습니다.");
+    setStatus(els.globalStatus, "글????��?�었?�니??");
     await fetchPosts();
   } catch (error) {
     console.warn("[admin] delete post failed", error);
-    setStatus(els.globalStatus, "글 삭제에 실패했습니다.", true);
+    setStatus(els.globalStatus, "글 ??��???�패?�습?�다.", true);
   }
 }
 
@@ -1600,49 +1581,13 @@ function validateAttachmentFile(file) {
     return;
   }
   if (file.size > MAX_ATTACHMENT_SIZE) {
-    throw new Error("첨부파일은 각 20MB 이하만 업로드할 수 있습니다.");
+    throw new Error("첨�??�일?� �?20MB ?�하�??�로?�할 ???�습?�다.");
   }
 }
 
-function buildSafeFilename(input) {
-  const s = String(input ?? "");
-  const safe = s.replace(/[^a-zA-Z0-9._-]/g, "_");
+function buildSafeFilename(name) {
+  const safe = name.replace(/[^a-zA-Z0-9._-]/g, "_");
   return `${Date.now()}-${safe}`;
-}
-
-function resolveUploadFilename(file, fallbackBase = "file") {
-  const originalName = String(file?.name ?? "").trim();
-  if (originalName) {
-    return originalName;
-  }
-  const ext = guessExtensionFromMimeType(file?.type);
-  return `${fallbackBase}-${Date.now()}.${ext}`;
-}
-
-function guessExtensionFromMimeType(type) {
-  const mime = String(type ?? "").toLowerCase();
-  if (!mime.startsWith("image/")) {
-    return "png";
-  }
-
-  const subtype = mime.split("/")[1] || "";
-  const normalized = subtype.split("+")[0];
-  if (normalized === "jpeg") {
-    return "jpg";
-  }
-  if (/^[a-z0-9]+$/.test(normalized)) {
-    return normalized;
-  }
-  return "png";
-}
-
-function logAdminError(stage, error) {
-  console.error("[admin] operation failed", {
-    stage,
-    code: error?.code || "unknown",
-    message: error?.message || String(error),
-    stack: error?.stack || ""
-  });
 }
 
 function showProgress(progressEl, value) {
@@ -1733,16 +1678,11 @@ function buildStorageUploadErrorMessage(error) {
 }
 
 function getStatusLabel(value) {
-  return value === "published" ? "발행" : "임시저장";
-}
-
-function normalizePostType(raw) {
-  const parts = String(raw || "").trim().split("/").filter(Boolean);
-  return parts.length ? parts[parts.length - 1] : "";
+  return value === "published" ? "발행" : "?�시?�??;
 }
 
 function getPostType(post) {
-  return normalizePostType(post?.type || post?.category || "");
+  return String(post?.type || post?.category || "");
 }
 
 function toPlainText(value) {
@@ -1767,7 +1707,7 @@ function buildContentHtmlFromPlain(value) {
 
 function normalizePostData(id, data) {
   const source = data || {};
-  const type = normalizePostType(source.type || source.category || "");
+  const type = String(source.type || source.category || "");
   const contentHtml = String(source.contentHtml || source.content || "");
   const coverImage = source.coverImage || source.featuredImage || source.resultImage || source.reviewProfileImage || null;
   return {
@@ -1784,7 +1724,7 @@ function normalizePostData(id, data) {
 }
 
 function normalizeSavePayload(type, payload) {
-  const normalizedType = normalizePostType(type || payload?.type || payload?.category || "");
+  const normalizedType = String(type || payload?.type || payload?.category || "");
   const normalizedStatus = payload?.status === "published" ? "published" : "draft";
   return {
     ...payload,
@@ -1827,11 +1767,11 @@ function getPreviewPosts() {
   return [
     {
       id: "preview-1",
-      title: "2026 봄학기 개강 안내",
+      title: "2026 봄학�?개강 ?�내",
       category: "notice",
       status: "published",
-      excerpt: "반편성 일정 및 개강 안내",
-      content: "미리보기용 공지 본문입니다.",
+      excerpt: "반편???�정�?개강???�내",
+      content: "미리보기??공�? 본문?�니??",
       featuredImage: null,
       gallery: [],
       createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 24 * 7),
@@ -1841,11 +1781,11 @@ function getPreviewPosts() {
     },
     {
       id: "preview-2",
-      title: "중등 내신 향상 사례",
+      title: "중등 ?�신 ?�상 ?��?",
       category: "result",
       status: "published",
       resultDate: normalizeDateInput(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 2)),
-      resultSummary: "중간고사 수학 68점에서 92점으로 상승했습니다.",
+      resultSummary: "중간고사 ?�학 68?�에??92?�으�??�상???��??�니??",
       resultImage: {
         url: "https://via.placeholder.com/960x640?text=Result+Image",
         path: "",
@@ -1853,7 +1793,7 @@ function getPreviewPosts() {
         type: "image/jpeg",
         size: 0
       },
-      content: "중간고사 수학 68점에서 92점으로 상승했습니다.",
+      content: "중간고사 ?�학 68?�에??92?�으�??�상???��??�니??",
       featuredImage: {
         url: "https://via.placeholder.com/960x640?text=Result+Image",
         path: "",
@@ -1869,11 +1809,11 @@ function getPreviewPosts() {
     },
     {
       id: "preview-3",
-      title: "수강생 후기",
+      title: "?��?�??�기",
       category: "review",
       status: "published",
       reviewYear: "2026",
-      reviewText: "오답 피드백이 꼼꼼해서 실력이 눈에 띄게 올랐습니다.",
+      reviewText: "?�이 ?�습 ?��????�정?�고 ?�적??꾸�????�랐?�요.",
       reviewProfileImage: {
         url: "https://via.placeholder.com/200x200?text=Profile",
         path: "",
@@ -1881,7 +1821,7 @@ function getPreviewPosts() {
         type: "image/jpeg",
         size: 0
       },
-      content: "오답 피드백이 꼼꼼해서 실력이 눈에 띄게 올랐습니다.",
+      content: "?�이 ?�습 ?��????�정?�고 ?�적??꾸�????�랐?�요.",
       featuredImage: {
         url: "https://via.placeholder.com/200x200?text=Profile",
         path: "",
@@ -1897,7 +1837,6 @@ function getPreviewPosts() {
     }
   ];
 }
-
 
 
 

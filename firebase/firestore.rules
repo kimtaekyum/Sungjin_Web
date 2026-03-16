@@ -1,24 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
     function isAdmin() {
-      return request.auth != null
+      return signedIn()
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
         && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
     }
 
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
+    // ✅ 관리자 권한 문서
     match /admins/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+      // 로그인한 본인만 자신의 admin 문서 읽기 가능
+      allow read: if signedIn() && request.auth.uid == uid;
+
+      // admin 권한 부여는 콘솔에서만 하도록 차단(안전)
       allow write: if false;
     }
 
+    // ✅ 게시글(공지/성과/후기/블로그)을 posts 컬렉션에 저장한다는 가정
     match /posts/{docId} {
-      allow read: if resource.data.status == "published" || isAdmin();
-      allow create, update, delete: if isAdmin();
+      // 공개: published만 읽기 허용
+      // 관리자: 전부 읽기 허용
+      allow read: if (resource != null && resource.data.status == "published") || isAdmin();
+
+      // 쓰기: active admin만
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // ✅ 그 외 전부 차단 (반드시 맨 아래)
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

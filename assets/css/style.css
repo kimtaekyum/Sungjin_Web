@@ -721,6 +721,18 @@ img {
   color: #333;
 }
 
+.btn-kakao {
+  background: #f8f8f1;
+  border-color: #e7e4c0;
+  color: #3b3600;
+}
+
+.btn-kakao:hover {
+  background: #f3efcc;
+  border-color: #dfd788;
+  box-shadow: 0 10px 20px rgba(84, 75, 0, 0.12);
+}
+
 .btn-outline:hover,
 .btn-gray:hover {
   border-color: var(--sj-red);
@@ -974,6 +986,26 @@ th {
   margin-top: 8px;
   color: var(--sj-gray);
   font-size: 0.9rem;
+}
+
+.kakao-status {
+  margin-top: 10px;
+  min-height: 1.4em;
+  color: #5a4d00;
+  font-size: 0.92rem;
+}
+
+.kakao-fallback-text {
+  margin-top: 8px;
+  width: 100%;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  line-height: 1.5;
+  background: #fffdf4;
+  color: #2f2f2f;
+  resize: vertical;
 }
 
 .about-nav {

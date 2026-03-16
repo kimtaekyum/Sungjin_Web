@@ -57,7 +57,7 @@
 
         <div class="card contact-form-card" data-reveal="right">
           <h3>상담 문의 폼</h3>
-          <form class="contact-form" action="#" method="post">
+          <form id="contact-form" class="contact-form" action="#" method="post">
             <label for="name">이름</label>
             <input id="name" name="name" type="text" required>
 
@@ -80,7 +80,24 @@
 
             <div class="cta-row">
               <button type="submit" class="btn btn-red">문의 남기기</button>
+              <button
+                type="button"
+                id="kakao-consult-btn"
+                class="btn btn-kakao"
+                aria-label="카카오톡 오픈채팅으로 상담하기"
+              >
+                카카오톡으로 상담하기
+              </button>
             </div>
+            <p id="kakao-status" class="kakao-status" role="status" aria-live="polite"></p>
+            <textarea
+              id="kakao-fallback-text"
+              class="kakao-fallback-text"
+              rows="7"
+              readonly
+              hidden
+              aria-label="카카오톡 상담 복사 실패 시 텍스트"
+            ></textarea>
           </form>
         </div>
 

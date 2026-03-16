@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -44,9 +44,6 @@
           <button id="loginBtn" class="btn btn-primary" type="button">로그인</button>
         </form>
 
-        <div class="auth-meta">
-          <a class="btn btn-secondary" href="./preview.html">미리보기로 보기</a>
-        </div>
       </div>
 
       <p id="authMessage" class="status" role="status" aria-live="polite"></p>
@@ -70,6 +67,14 @@
               <option value="blog">블로그 소식 (홈 블로그 영역)</option>
             </select>
           </div>
+          <div class="toolbar-row">
+            <label for="filterStatus">상태</label>
+            <select id="filterStatus">
+              <option value="all">전체</option>
+              <option value="published">발행</option>
+              <option value="draft">임시저장</option>
+            </select>
+          </div>
 
           <div class="toolbar-row toolbar-search">
             <label for="searchTitle">제목 검색</label>
@@ -91,6 +96,7 @@
               <tr>
                 <th scope="col">제목</th>
                 <th scope="col">카테고리</th>
+                <th scope="col">상태</th>
                 <th scope="col">발행/수정일</th>
                 <th scope="col">액션</th>
               </tr>
@@ -105,9 +111,21 @@
 
           <label for="title">제목 *</label>
           <input id="title" name="title" type="text" maxlength="120" required>
+          <label for="postStatus">상태 *</label>
+          <select id="postStatus" name="postStatus" required>
+            <option value="draft" selected>임시저장</option>
+            <option value="published">발행</option>
+          </select>
           <p id="titleHint" class="field-hint" hidden>성과 사례 제목은 30자 이내로 입력해주세요.</p>
           <p id="editorCategoryText" class="field-hint">작성 카테고리: -</p>
           <p id="editorCategoryHint" class="status" hidden>상단 카테고리에서 공지사항/성과 사례/후기를 선택하면 글을 작성할 수 있습니다.</p>
+
+          <div class="upload-group">
+            <label for="coverImageFile">대표 이미지 (선택)</label>
+            <input id="coverImageFile" type="file" accept="image/*">
+            <progress id="coverImageProgress" max="100" value="0" hidden></progress>
+            <div id="coverImagePreview" class="preview-grid"></div>
+          </div>
 
           <section id="resultCaseFields" class="result-case-fields" hidden>
             <h4>성과 사례 입력</h4>
@@ -178,7 +196,7 @@
           <ul>
             <li>컬렉션: <code>posts</code></li>
             <li>카테고리: <code>notice</code>(공지사항), <code>result</code>(성과 사례), <code>review</code>(후기), <code>blog</code>(블로그 소식)</li>
-            <li>스토리지 경로: <code>posts/{postId}/attachments/{filename}</code>, <code>posts/inline/{filename}</code>, <code>posts/{postId}/review/{filename}</code></li>
+            <li>스토리지 경로: <code>posts/{postId}/attachments/{filename}</code>, <code>posts/{postId}/inline/{filename}</code>, <code>posts/{postId}/review/{filename}</code></li>
           </ul>
         </article>
         <article class="help-card">
@@ -221,6 +239,5 @@
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
-  <script type="module" src="./admin.js?v=20260302c"></script>
-</body>
+ <script type="module" src="./admin.js?v=20260304a"></script>
 </html>

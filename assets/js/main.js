@@ -3,6 +3,7 @@
   let revealObserver;
   let revealInstantMode = false;
   let visibilityListenerBound = false;
+  const KAKAO_OPENCHAT_URL = "https://open.kakao.com/o/REPLACE_ME";
 
   function initNavToggle() {
     const navToggle = document.querySelector(".nav-toggle");
@@ -175,6 +176,11 @@
     return y + "-" + m + "-" + d;
   }
 
+  function normalizePostType(raw) {
+    const parts = String(raw || "").trim().split("/").filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : "";
+  }
+
   async function loadBlogPostsFromFirestore(blogList) {
     const firebaseModules = await Promise.all([
       import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
@@ -196,8 +202,9 @@
     const db = firestoreMod.getFirestore(app);
     const postQuery = firestoreMod.query(
       firestoreMod.collection(db, "posts"),
-      firestoreMod.where("category", "==", "blog"),
-      firestoreMod.limit(30)
+      firestoreMod.where("status", "==", "published"),
+      firestoreMod.orderBy("updatedAt", "desc"),
+      firestoreMod.limit(50)
     );
     const snap = await firestoreMod.getDocs(postQuery);
 
@@ -205,6 +212,8 @@
       .map(function (docSnap) {
         const data = docSnap.data() || {};
         return {
+          type: data.type || "",
+          category: data.category || "",
           title: data.title || "",
           dateObj: toDateValue(data.publishedAt) || toDateValue(data.updatedAt) || toDateValue(data.createdAt),
           link: data.blogLink || data.link || "#",
@@ -212,7 +221,8 @@
         };
       })
       .filter(function (post) {
-        return post.title && post.link && post.status === "published";
+        const docType = normalizePostType(post?.type || post?.category || "");
+        return post.title && post.link && post.status === "published" && docType === "blog";
       })
       .sort(function (a, b) {
         const at = a.dateObj ? a.dateObj.getTime() : 0;
@@ -510,6 +520,275 @@
     }
   }
 
+  function resolveFirestoreType(post) {
+    return normalizePostType((post && (post.type || post.category)) || "");
+  }
+
+  function resolveFirestoreCoverUrl(post) {
+    return (
+      (post && post.coverImage && post.coverImage.url) ||
+      (post && post.featuredImage && post.featuredImage.url) ||
+      (post && post.resultImage && post.resultImage.url) ||
+      (post && post.reviewProfileImage && post.reviewProfileImage.url) ||
+      ""
+    );
+  }
+
+  function resolveFirestoreDate(post) {
+    return (
+      toDateValue(post && post.updatedAt) ||
+      toDateValue(post && post.publishedAt) ||
+      toDateValue(post && post.createdAt)
+    );
+  }
+
+  function resolveFirestorePostLink(post, type) {
+    const value = (post && (post.link || post.blogLink)) || "";
+    if (value && /^https?:\/\//i.test(value)) {
+      return value;
+    }
+    if (type === "notice") {
+      return "/blog/category/notice/";
+    }
+    if (type === "result") {
+      return "/blog/category/result/";
+    }
+    if (type === "review") {
+      return "/blog/category/review/";
+    }
+    return "/blog/";
+  }
+
+  function normalizeFirestorePost(docSnap) {
+    const data = docSnap.data() || {};
+    const contentHtml = data.contentHtml || data.content || "";
+    return {
+      id: docSnap.id,
+      type: resolveFirestoreType(data),
+      status: data.status || "",
+      title: data.title || "",
+      contentHtml: contentHtml,
+      excerpt: data.excerpt || trimText(stripHtml(contentHtml), 120),
+      coverUrl: resolveFirestoreCoverUrl(data),
+      link: data.link || data.blogLink || "",
+      reviewYear: data.reviewYear || "",
+      dateObj: resolveFirestoreDate(data),
+    };
+  }
+
+  function buildPostQueryMeta(slug, limitCount) {
+    const normalizedSlug = normalizePostType(slug);
+    return {
+      slug: normalizedSlug,
+      status: "published",
+      orderBy: "updatedAt desc",
+      limit: limitCount,
+      filter: '(post.type || post.category) === slug'
+    };
+  }
+
+  async function getFirestorePublishedPosts(slug, perPage) {
+    const normalizedSlug = normalizePostType(slug);
+    const firebaseModules = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
+      import("./firebase-config.js"),
+    ]);
+    const firebaseApp = firebaseModules[0];
+    const firestoreMod = firebaseModules[1];
+    const firebaseLocal = firebaseModules[2];
+
+    var appName = "sungjin-main-posts";
+    var app = firebaseApp.getApps().find(function (item) {
+      return item.name === appName;
+    });
+    if (!app) {
+      app = firebaseApp.initializeApp(firebaseLocal.firebaseConfig, appName);
+    }
+    const db = firestoreMod.getFirestore(app);
+
+    const baseQuery = firestoreMod.query(
+      firestoreMod.collection(db, "posts"),
+      firestoreMod.where("status", "==", "published"),
+      firestoreMod.orderBy("updatedAt", "desc"),
+      firestoreMod.limit(50)
+    );
+
+    try {
+      const snap = await firestoreMod.getDocs(baseQuery);
+      return snap.docs
+        .map(normalizeFirestorePost)
+        .filter(function (post) {
+          return resolveFirestoreType(post) === normalizedSlug;
+        })
+        .slice(0, perPage);
+    } catch (error) {
+      error.queryMeta = buildPostQueryMeta(normalizedSlug, 50);
+      throw error;
+    }
+  }
+
+  function clearFirestoreInlineError(container) {
+    if (!container) {
+      return;
+    }
+    const err = container.querySelector(".firestore-inline-error");
+    if (err) {
+      err.remove();
+    }
+  }
+
+  function showFirestoreInlineError(container, message) {
+    if (!container) {
+      return;
+    }
+    clearFirestoreInlineError(container);
+    const p = document.createElement("p");
+    p.className = "wp-empty firestore-inline-error";
+    p.setAttribute("role", "status");
+    p.setAttribute("aria-live", "polite");
+    p.textContent = message;
+    container.insertBefore(p, container.firstChild);
+  }
+
+  function renderFirestoreList(container, posts, type) {
+    if (!container || !Array.isArray(posts) || !posts.length) {
+      throw new Error("empty firestore posts");
+    }
+
+    container.innerHTML = "";
+    const fragment = document.createDocumentFragment();
+
+    posts.forEach(function (post) {
+      const title = post.title || "?쒕ぉ ?놁쓬";
+      const excerpt = post.excerpt || "?먯꽭???댁슜? ?붾낫湲곗뿉???뺤씤?섏꽭??";
+      const dateText = formatDateISO(post.dateObj);
+      const link = resolveFirestorePostLink(post, type);
+      const imageUrl = post.coverUrl;
+
+      if (type === "result") {
+        const card = document.createElement("article");
+        card.className = "case-card";
+        card.setAttribute("data-reveal", "up");
+
+        const media = document.createElement("div");
+        media.className = "media-box";
+        if (imageUrl) {
+          media.style.backgroundImage = 'url("' + imageUrl + '")';
+        } else {
+          media.innerHTML = '<span class="media-badge">?대?吏 異붽? ?덉젙</span>';
+        }
+
+        const body = document.createElement("div");
+        body.className = "card-body";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = title;
+        const meta = document.createElement("p");
+        meta.className = "case-meta";
+        meta.textContent = dateText;
+        const p = document.createElement("p");
+        p.textContent = excerpt;
+        const more = document.createElement("a");
+        more.className = "wp-post-link";
+        more.href = link;
+        more.textContent = "?먯꽭??蹂닿린";
+
+        body.appendChild(h3);
+        body.appendChild(meta);
+        body.appendChild(p);
+        body.appendChild(more);
+        card.appendChild(media);
+        card.appendChild(body);
+        fragment.appendChild(card);
+        return;
+      }
+
+      if (type === "review") {
+        const card = document.createElement("article");
+        card.className = "testimonial-card";
+        card.setAttribute("data-reveal", "up");
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        if (imageUrl) {
+          avatar.style.backgroundImage = 'url("' + imageUrl + '")';
+        }
+
+        const metaRow = document.createElement("div");
+        metaRow.className = "review-meta";
+        const badge = document.createElement("span");
+        badge.className = "type-badge";
+        badge.textContent = "?꾧린";
+        const year = document.createElement("span");
+        year.className = "review-year";
+        year.textContent = post.reviewYear || (dateText || "").slice(0, 4);
+        metaRow.appendChild(badge);
+        metaRow.appendChild(year);
+
+        const quote = document.createElement("p");
+        quote.className = "quote";
+        quote.textContent = excerpt;
+        const linkEl = document.createElement("a");
+        linkEl.className = "wp-post-link";
+        linkEl.href = link;
+        linkEl.textContent = "?먯꽭??蹂닿린";
+
+        card.appendChild(avatar);
+        card.appendChild(metaRow);
+        card.appendChild(quote);
+        card.appendChild(linkEl);
+        fragment.appendChild(card);
+        return;
+      }
+
+      const item = document.createElement("a");
+      item.className = "notice-item";
+      item.href = link;
+      item.setAttribute("data-reveal", "up");
+
+      const t = document.createElement("span");
+      t.textContent = title;
+      const d = document.createElement("span");
+      d.className = "notice-date";
+      d.textContent = dateText;
+      item.appendChild(t);
+      item.appendChild(d);
+      fragment.appendChild(item);
+    });
+
+    container.appendChild(fragment);
+    clearFirestoreInlineError(container);
+    refreshScrollReveal();
+  }
+
+  function loadFirestorePostsInto(container, slug, perPage) {
+    const normalizedSlug = normalizePostType(slug);
+    getFirestorePublishedPosts(normalizedSlug, perPage)
+      .then(function (posts) {
+        renderFirestoreList(container, posts, normalizedSlug);
+      })
+      .catch(function (error) {
+        const queryMeta = error?.queryMeta || buildPostQueryMeta(normalizedSlug, 50);
+        const isIndexPending = error?.code === "failed-precondition";
+        console.warn("[main] Firestore list load failed", {
+          slug: normalizedSlug,
+          type: normalizedSlug,
+          status: "published",
+          updatedAt: "desc",
+          query: queryMeta,
+          url: window.location.href,
+          errorCode: error?.code || "unknown",
+          error: error
+        });
+        showFirestoreInlineError(container, isIndexPending ? "불러오지 못했습니다. 인덱스 생성 중일 수 있습니다." : "불러오지 못했습니다");
+      });
+  }
+
+  function getContainerPostType(listEl, fallbackType) {
+    return normalizePostType((listEl && listEl.dataset && listEl.dataset.postType) || fallbackType || "");
+  }
+
   function initWpPostLists() {
     try {
       const noticeList = document.getElementById("wp-notice-list");
@@ -519,19 +798,24 @@
       const homeReview = document.getElementById("wp-home-review");
 
       if (noticeList) {
-        loadWpPostsInto(noticeList, "notice", 8, "notice");
+        const type = getContainerPostType(noticeList, "notice");
+        loadFirestorePostsInto(noticeList, type, 8);
       }
       if (resultList) {
-        loadWpPostsInto(resultList, "result", 6, "result");
+        const type = getContainerPostType(resultList, "result");
+        loadFirestorePostsInto(resultList, type, 6);
       }
       if (reviewList) {
-        loadWpPostsInto(reviewList, "review", 4, "review");
+        const type = getContainerPostType(reviewList, "review");
+        loadFirestorePostsInto(reviewList, type, 6);
       }
       if (homeNotice) {
-        loadWpPostsInto(homeNotice, "notice", 3, "notice");
+        const type = getContainerPostType(homeNotice, "notice");
+        loadFirestorePostsInto(homeNotice, type, 3);
       }
       if (homeReview) {
-        loadWpPostsInto(homeReview, "review", 4, "home-review");
+        const type = getContainerPostType(homeReview, "review");
+        loadFirestorePostsInto(homeReview, type, 4);
       }
     } catch (err) {
       console.warn("WP post list init failed", err);
@@ -954,6 +1238,83 @@
     refreshScrollReveal();
   }
 
+  function setupKakaoConsultButton() {
+    const form = document.getElementById("contact-form");
+    const btn = document.getElementById("kakao-consult-btn");
+    const statusEl = document.getElementById("kakao-status");
+    const fallbackTextEl = document.getElementById("kakao-fallback-text");
+    if (!form || !btn || !statusEl || !fallbackTextEl) {
+      return;
+    }
+
+    function readValue(name) {
+      const field = form.elements.namedItem(name);
+      if (!field || typeof field.value !== "string") {
+        return "";
+      }
+      return field.value.trim();
+    }
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+    }
+
+    function buildConsultText() {
+      const name = readValue("name");
+      const grade = readValue("grade");
+      const subject = readValue("subject");
+      const phone = readValue("phone");
+      const message = readValue("message");
+      return [
+        "[성진학원 상담 문의]",
+        "이름: " + name,
+        "학생학년: " + grade,
+        "과목: " + subject,
+        "연락처: " + phone,
+        "문의내용: " + message,
+      ].join("\n");
+    }
+
+    function isFormFilled() {
+      return ["name", "grade", "subject", "message", "phone"].every(function (key) {
+        return readValue(key).length > 0;
+      });
+    }
+
+    btn.addEventListener("click", async function () {
+      window.open(KAKAO_OPENCHAT_URL, "_blank", "noopener,noreferrer");
+
+      if (!isFormFilled()) {
+        setStatus("카카오톡 창이 열렸습니다. 상담 내용을 먼저 작성하면 복사도 함께 됩니다.");
+        fallbackTextEl.hidden = true;
+        fallbackTextEl.value = "";
+        return;
+      }
+
+      const consultText = buildConsultText();
+      let copied = false;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        try {
+          await navigator.clipboard.writeText(consultText);
+          copied = true;
+        } catch (error) {
+          console.warn("[contact] kakao clipboard copy failed", error);
+        }
+      }
+
+      if (copied) {
+        setStatus("내용이 복사되었습니다. 카카오톡에서 붙여넣기 후 전송해주세요.");
+        fallbackTextEl.hidden = true;
+        fallbackTextEl.value = "";
+      } else {
+        setStatus("복사가 실패했습니다. 아래 내용을 직접 복사해 주세요.");
+        fallbackTextEl.value = consultText;
+        fallbackTextEl.hidden = false;
+      }
+
+    });
+  }
+
   function init() {
     if (initialized) {
       return;
@@ -973,6 +1334,7 @@
     setupHeroSlider();
     initLightbox();
     initGalleryLightbox();
+    setupKakaoConsultButton();
     initScrollReveal();
   }
 

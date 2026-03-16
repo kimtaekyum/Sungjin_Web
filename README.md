@@ -97,22 +97,38 @@ title,date,link
 - URL: `/admin/index.html`
 - 로그인 성공 후 `admins/{uid}.active == true` 검증을 통과하면 대시보드가 표시됩니다.
 
-### 4-6) posts 컬렉션 데이터 구조
+### 4-6) `posts` 컬렉션 데이터 모델
 
 | 필드 | 타입 | 설명 |
 |---|---|---|
-| `title` | string | 필수 |
-| `category` | string | `notice` / `result` / `review` / `blog` |
+| `type` | string | `notice` / `result` / `review` / `blog` |
+| `title` | string | 제목 |
+| `contentHtml` | string | 본문 HTML |
+| `excerpt` | string | 요약문(선택) |
 | `status` | string | `draft` / `published` |
-| `excerpt` | string | 선택 |
-| `content` | string | 필수(plain text/간단 markdown 권장) |
-| `featuredImage` | object/null | `{ url, path, width, height }` |
-| `gallery` | array | `[{ url, path, width, height }]` |
-| `createdAt` | timestamp | 생성 시 서버 시간 |
-| `updatedAt` | timestamp | 수정 시 서버 시간 |
-| `publishedAt` | timestamp/null | `published`일 때 사용 |
+| `createdAt` | timestamp | 생성 시각 |
+| `updatedAt` | timestamp | 수정 시각 |
+| `coverImage` | object/null | 대표 이미지(선택): `{ url, path, name, type, size }` |
 | `authorUid` | string | 작성/수정 사용자 UID |
 
+호환을 위해 기존 문서에 `category`, `content`, `featuredImage`가 남아 있어도 읽기 로직에서 자동 매핑됩니다.
+
+### 4-7) Firestore 인덱스 생성 방법
+
+`type`, `status`, `updatedAt desc` 조합 쿼리를 처음 실행하면 인덱스 누락 오류와 함께 콘솔 링크가 표시됩니다.
+
+1. 브라우저 콘솔 에러의 `Create index` 링크를 클릭합니다.
+2. Firebase Console에서 제안된 인덱스 설정을 그대로 확인하고 생성합니다.
+3. 인덱스 상태가 `Enabled`가 될 때까지 대기 후 페이지를 새로고침합니다.
+
+### 필수 인덱스
+
+| 컬렉션 | 필드 1 | 필드 2 | 필드 3 |
+|---|---|---|---|
+| `posts` | `type` (ASC) | `status` (ASC) | `updatedAt` (DESC) |
+| `posts` (레거시 호환) | `category` (ASC) | `status` (ASC) | `updatedAt` (DESC) |
+
+`type`가 공식 기준이며, 레거시 호환을 위해 `category` 인덱스도 함께 유지합니다.
 ## 5) 배포 체크리스트
 
 1. 도메인 연결: DNS(A/CNAME) 설정 확인
