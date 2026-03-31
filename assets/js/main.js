@@ -203,6 +203,7 @@
     const postQuery = firestoreMod.query(
       firestoreMod.collection(db, "posts"),
       firestoreMod.where("status", "==", "published"),
+      firestoreMod.where("type", "==", "blog"),
       firestoreMod.orderBy("updatedAt", "desc"),
       firestoreMod.limit(50)
     );
@@ -583,7 +584,7 @@
       status: "published",
       orderBy: "updatedAt desc",
       limit: limitCount,
-      filter: '(post.type || post.category) === slug'
+      filter: 'status == "published" && (type == slug || category == slug)'
     };
   }
 
@@ -607,23 +608,33 @@
     }
     const db = firestoreMod.getFirestore(app);
 
-    const baseQuery = firestoreMod.query(
-      firestoreMod.collection(db, "posts"),
-      firestoreMod.where("status", "==", "published"),
-      firestoreMod.orderBy("updatedAt", "desc"),
-      firestoreMod.limit(50)
-    );
-
     try {
-      const snap = await firestoreMod.getDocs(baseQuery);
-      return snap.docs
-        .map(normalizeFirestorePost)
-        .filter(function (post) {
-          return resolveFirestoreType(post) === normalizedSlug;
-        })
-        .slice(0, perPage);
+      const typeQuery = firestoreMod.query(
+        firestoreMod.collection(db, "posts"),
+        firestoreMod.where("status", "==", "published"),
+        firestoreMod.where("type", "==", normalizedSlug),
+        firestoreMod.orderBy("updatedAt", "desc"),
+        firestoreMod.limit(Math.max(50, perPage))
+      );
+      const typeSnap = await firestoreMod.getDocs(typeQuery);
+      const typePosts = typeSnap.docs.map(normalizeFirestorePost).slice(0, perPage);
+      if (typePosts.length > 0) {
+        return typePosts;
+      }
+
+      // Fallback: older docs might only have `category`.
+      // This requires a composite index on (category, status, updatedAt desc).
+      const categoryQuery = firestoreMod.query(
+        firestoreMod.collection(db, "posts"),
+        firestoreMod.where("status", "==", "published"),
+        firestoreMod.where("category", "==", normalizedSlug),
+        firestoreMod.orderBy("updatedAt", "desc"),
+        firestoreMod.limit(Math.max(50, perPage))
+      );
+      const categorySnap = await firestoreMod.getDocs(categoryQuery);
+      return categorySnap.docs.map(normalizeFirestorePost).slice(0, perPage);
     } catch (error) {
-      error.queryMeta = buildPostQueryMeta(normalizedSlug, 50);
+      error.queryMeta = buildPostQueryMeta(normalizedSlug, Math.max(50, perPage));
       throw error;
     }
   }
@@ -771,16 +782,23 @@
       .catch(function (error) {
         const queryMeta = error?.queryMeta || buildPostQueryMeta(normalizedSlug, 50);
         const isIndexPending = error?.code === "failed-precondition";
-        console.warn("[main] Firestore list load failed", {
-          slug: normalizedSlug,
-          type: normalizedSlug,
-          status: "published",
-          updatedAt: "desc",
-          query: queryMeta,
-          url: window.location.href,
-          errorCode: error?.code || "unknown",
-          error: error
-        });
+        const code = String(error?.code || "unknown");
+        const message = String(error?.message || "");
+        console.warn(
+          "[main] Firestore list load failed",
+          "type=" + normalizedSlug,
+          "code=" + code,
+          message ? "message=" + message : "",
+          {
+            slug: normalizedSlug,
+            type: normalizedSlug,
+            status: "published",
+            updatedAt: "desc",
+            query: queryMeta,
+            url: window.location.href,
+          },
+          error
+        );
         showFirestoreInlineError(container, isIndexPending ? "불러오지 못했습니다. 인덱스 생성 중일 수 있습니다." : "불러오지 못했습니다");
       });
   }

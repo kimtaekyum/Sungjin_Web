@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
   onAuthStateChanged,
@@ -1478,9 +1478,12 @@ async function savePost(event) {
     await fetchPosts();
   } catch (error) {
     logAdminError(saveStage, error);
-    const message = isStorageUploadError(error)
-      ? buildStorageUploadErrorMessage(error)
-      : "저장에 실패했습니다. 네트워크 상태를 확인하세요.";
+    let message = "저장에 실패했습니다. 네트워크 상태를 확인하세요.";
+    if (saveStage === "storage_review") {
+      message = "후기 프로필 이미지를 선택해 주세요.";
+    } else if (isStorageUploadError(error)) {
+      message = buildStorageUploadErrorMessage(error);
+    }
     setStatus(els.formMessage, message, true);
   } finally {
     resetProgress(els.attachmentProgress);
@@ -1605,8 +1608,9 @@ function validateAttachmentFile(file) {
 }
 
 function buildSafeFilename(input) {
-  const s = String(input ?? "");
-  const safe = s.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const raw = String(input ?? "").trim();
+  const base = raw || "image.png";
+  const safe = base.replace(/[^a-zA-Z0-9._-]/g, "_");
   return `${Date.now()}-${safe}`;
 }
 
