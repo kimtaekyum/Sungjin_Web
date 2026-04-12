@@ -1,0 +1,68 @@
+name: 네이버 블로그 RSS 동기화
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # 매시 정각 (UTC)
+  workflow_dispatch:        # 수동 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: .env.local 생성 (Vite 빌드용)
+        run: |
+          cat > .env.local << 'EOF'
+          VITE_FIREBASE_API_KEY=AIzaSyBnItOrMhn1kEvtS4TZu5HeYERV8pMHPrk
+          VITE_FIREBASE_AUTH_DOMAIN=sungjin-web.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID=sungjin-web
+          VITE_FIREBASE_STORAGE_BUCKET=sungjin-web.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID=447030734086
+          VITE_FIREBASE_APP_ID=1:447030734086:web:34f7698cf43b6e99958287
+          VITE_FIREBASE_MEASUREMENT_ID=G-P1Y86V2EBD
+          EOF
+
+      - name: RSS 동기화
+        run: python3 scripts/sync-blog-rss.py || true
+
+      - name: 변경사항 확인
+        id: changes
+        run: |
+          if git diff --quiet assets/data/; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "블로그 변경 없음 — 배포 생략"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "블로그 변경 감지 — 빌드 및 배포 진행"
+          fi
+
+      - name: Vite 빌드
+        if: steps.changes.outputs.changed == 'true'
+        run: npm run build
+
+      - name: Firebase 배포
+        if: steps.changes.outputs.changed == 'true'
+        run: npx -y firebase-tools deploy --only hosting --project sungjin-web --token "${{ secrets.FIREBASE_TOKEN }}"
+
+      - name: Git 커밋 & 푸시
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/data/blog_posts.csv assets/data/blog_posts.json
+          git commit -m "auto: 네이버 블로그 RSS 동기화 $(date -u +%Y-%m-%d)"
+          git push
