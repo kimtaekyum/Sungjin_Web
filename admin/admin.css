@@ -592,82 +592,6 @@ th {
   margin-top: 0.25rem;
 }
 
-.blog-slots {
-  margin-top: 1rem;
-  border: 1px solid #e9e0e1;
-  border-radius: 12px;
-  padding: 1rem;
-  background: #fffdfd;
-}
-
-.blog-slots h3 {
-  margin: 0 0 0.25rem;
-  font-size: 1.04rem;
-}
-
-.blog-slots-desc {
-  margin: 0 0 0.8rem;
-  color: var(--gray);
-  font-size: 0.9rem;
-}
-
-.blog-slots-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-
-.blog-slot-card {
-  border: 1px solid #e4d8da;
-  border-left: 3px solid rgba(184, 28, 34, 0.48);
-  border-radius: 10px;
-  padding: 0.7rem;
-  background: #fff;
-  display: grid;
-  gap: 0.45rem;
-}
-
-.blog-slot-card.is-empty {
-  border-style: dashed;
-  border-left-style: solid;
-  background: #fff9f9;
-}
-
-.blog-slot-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.blog-slot-title {
-  margin: 0;
-  font-size: 0.96rem;
-  line-height: 1.45;
-}
-
-.blog-slot-link {
-  color: #9b1e24;
-  font-size: 0.85rem;
-  word-break: break-all;
-}
-
-.blog-slot-inputs {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.blog-slot-actions {
-  display: flex;
-  gap: 0.45rem;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.blog-slot-actions .btn {
-  font-size: 0.86rem;
-  padding: 0.45rem 0.62rem;
-}
-
 .upload-group {
   display: grid;
   gap: 0.45rem;
@@ -790,10 +714,6 @@ progress {
 
 @media (max-width: 900px) {
   .toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .blog-slots-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -91,9 +91,6 @@ const els = {
   searchTitle: document.getElementById("searchTitle"),
   postsTableWrap: document.getElementById("postsTableWrap"),
   postsTableBody: document.getElementById("postsTableBody"),
-  blogSlotsSection: document.getElementById("blogSlotsSection"),
-  blogSlotsGrid: document.getElementById("blogSlotsGrid"),
-  blogSlotsMessage: document.getElementById("blogSlotsMessage"),
   postForm: document.getElementById("postForm"),
   formTitle: document.getElementById("formTitle"),
   postId: document.getElementById("postId"),
@@ -191,7 +188,6 @@ function bindEvents() {
   els.attachmentFiles.addEventListener("change", handleAttachmentSelect);
   els.attachmentList.addEventListener("click", handleAttachmentRemove);
   els.postsTableBody.addEventListener("click", handleTableAction);
-  els.blogSlotsGrid.addEventListener("click", handleBlogSlotAction);
 
   for (const btn of els.tabs) {
     btn.addEventListener("click", () => setTab(btn.dataset.tab));
@@ -403,10 +399,6 @@ function renderPostsTable() {
   const status = els.filterStatus.value;
   const keyword = els.searchTitle.value.trim().toLowerCase();
   updateBlogManagementView(category);
-  if (category === "blog") {
-    renderBlogSlots();
-    return;
-  }
 
   const filtered = state.posts.filter((post) => {
     const type = getPostType(post);
@@ -890,12 +882,10 @@ function updateReviewTextCount() {
 }
 
 function updateBlogManagementView(category) {
-  const isBlogOnly = category === "blog";
   const canWrite = category === "notice" || category === "result" || category === "review";
-  els.blogSlotsSection.hidden = !isBlogOnly;
-  els.postsTableWrap.hidden = isBlogOnly;
+  els.postsTableWrap.hidden = false;
   els.postForm.hidden = !canWrite;
-  els.searchRow.hidden = isBlogOnly;
+  els.searchRow.hidden = false;
   els.editorCategoryHint.hidden = canWrite;
   syncEditorModeByCategory(category);
   if (!canWrite) {
@@ -920,182 +910,6 @@ function resolvePostDate(post) {
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
 }
 
-function getBlogPostsForSlots() {
-  const publishedBlogs = state.posts.filter((post) => getPostType(post) === "blog" && post.status === "published");
-  const sorted = sortByTimeDesc(publishedBlogs);
-  const slots = new Array(5).fill(null);
-
-  sorted.forEach((post) => {
-    const slotNo = Number(post.homeBlogSlot);
-    if (slotNo >= 1 && slotNo <= 5 && !slots[slotNo - 1]) {
-      slots[slotNo - 1] = post;
-    }
-  });
-
-  sorted.forEach((post) => {
-    if (slots.includes(post)) {
-      return;
-    }
-    const emptyIndex = slots.findIndex((item) => item === null);
-    if (emptyIndex >= 0) {
-      slots[emptyIndex] = post;
-    }
-  });
-
-  return slots;
-}
-
-function renderBlogSlots() {
-  const slots = getBlogPostsForSlots();
-  const html = slots
-    .map((post, idx) => {
-      const slotNo = idx + 1;
-      if (post) {
-        return `
-          <article class="blog-slot-card" data-slot="${slotNo}">
-            <span class="blog-slot-label">슬롯 ${slotNo}</span>
-            <p class="blog-slot-title">${escapeHtml(post.title || "(제목 없음)")}</p>
-            <a class="blog-slot-link" href="${escapeHtml(post.blogLink || "#")}" target="_blank" rel="noopener">${escapeHtml(post.blogLink || "-")}</a>
-            <div class="blog-slot-actions">
-              <button type="button" class="btn btn-secondary" data-action="blog-delete" data-id="${post.id}" data-slot="${slotNo}">삭제 후 비우기</button>
-            </div>
-          </article>
-        `;
-      }
-      return `
-        <article class="blog-slot-card is-empty" data-slot="${slotNo}">
-          <span class="blog-slot-label">슬롯 ${slotNo} (비어 있음)</span>
-          <div class="blog-slot-inputs">
-            <input type="text" class="slot-title" placeholder="블로그 글 제목" maxlength="120">
-            <input type="url" class="slot-link" placeholder="https://blog.naver.com/...">
-          </div>
-          <div class="blog-slot-actions">
-            <button type="button" class="btn btn-primary" data-action="blog-add" data-slot="${slotNo}">등록</button>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-
-  els.blogSlotsGrid.innerHTML = html;
-  setStatus(els.blogSlotsMessage, "슬롯을 변경한 경우 삭제 후 원하는 슬롯에 다시 등록하세요.");
-}
-
-async function handleBlogSlotAction(event) {
-  const target = event.target;
-  if (!(target instanceof HTMLButtonElement)) {
-    return;
-  }
-
-  const action = target.dataset.action;
-  if (action === "blog-delete") {
-    const id = target.dataset.id;
-    if (!id) {
-      return;
-    }
-    const post = state.posts.find((item) => item.id === id);
-    if (!post) {
-      return;
-    }
-    await deletePost(post);
-    if (els.filterCategory.value === "blog") {
-      renderBlogSlots();
-    }
-    return;
-  }
-
-  if (action !== "blog-add") {
-    return;
-  }
-
-  const slotNo = Number(target.dataset.slot);
-  const card = target.closest(".blog-slot-card");
-  if (!card || Number.isNaN(slotNo) || slotNo < 1 || slotNo > 5) {
-    return;
-  }
-
-  const titleInput = card.querySelector(".slot-title");
-  const linkInput = card.querySelector(".slot-link");
-  const title = String(titleInput?.value || "").trim();
-  const blogLink = String(linkInput?.value || "").trim();
-
-  if (!title) {
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}: 제목을 입력하세요.`, true);
-    return;
-  }
-  if (!isValidUrl(blogLink)) {
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}: URL 형식을 확인하세요.`, true);
-    return;
-  }
-  if (getBlogPostsForSlots()[slotNo - 1]) {
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}은 이미 사용 중입니다. 삭제 후 다시 등록하세요.`, true);
-    return;
-  }
-
-  try {
-    target.disabled = true;
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo} 저장 중입니다...`);
-    await createBlogPostForSlot(slotNo, title, blogLink);
-    setStatus(els.blogSlotsMessage, `슬롯 ${slotNo}에 등록되었습니다.`);
-    await fetchPosts();
-  } catch (error) {
-    console.warn("[admin] blog slot save failed", error);
-    setStatus(els.blogSlotsMessage, "슬롯 저장에 실패했습니다. 다시 시도하세요.", true);
-  } finally {
-    target.disabled = false;
-  }
-}
-
-async function createBlogPostForSlot(slotNo, title, blogLink) {
-  if (PREVIEW_MODE) {
-    const now = new Date();
-    const post = {
-      id: `preview-blog-${Date.now()}`,
-      title,
-      type: "blog",
-      category: "blog",
-      status: "published",
-      excerpt: "",
-      contentHtml: "",
-      content: "",
-      blogLink,
-      homeBlogSlot: slotNo,
-      coverImage: null,
-      featuredImage: null,
-      gallery: [],
-      createdAt: now,
-      updatedAt: now,
-      publishedAt: now,
-      authorUid: "preview-admin"
-    };
-    state.posts = [post, ...state.posts];
-    return;
-  }
-  if (!state.isAdmin || !state.user) {
-    throw new Error("관리자 인증이 필요합니다.");
-  }
-
-  const postRef = doc(collection(db, "posts"));
-  const payload = {
-    title,
-    type: "blog",
-    category: "blog",
-    status: "published",
-    excerpt: "",
-    contentHtml: "",
-    content: "",
-    blogLink,
-    homeBlogSlot: slotNo,
-    coverImage: null,
-    featuredImage: null,
-    gallery: [],
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    publishedAt: serverTimestamp(),
-    authorUid: state.user.uid
-  };
-  await setDoc(postRef, payload);
-}
 
 function sanitizeHtml(value) {
   const html = value || "";

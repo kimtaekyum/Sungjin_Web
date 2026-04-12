@@ -62,7 +62,6 @@
               <option value="notice">공지사항 (notice.html)</option>
               <option value="result">성과 사례 (results.html)</option>
               <option value="review">후기 (results.html)</option>
-              <option value="blog">블로그 소식 (홈 블로그 영역)</option>
             </select>
           </div>
           <div class="toolbar-row">
@@ -79,13 +78,6 @@
             <input id="searchTitle" type="search" placeholder="제목 일부 입력">
           </div>
         </div>
-
-        <section id="blogSlotsSection" class="blog-slots" hidden>
-          <h3>홈 블로그 5개 슬롯 관리</h3>
-          <p class="blog-slots-desc">총 5개만 노출됩니다. 기존 글을 바꾸려면 먼저 삭제한 뒤 빈 슬롯에 재등록하세요.</p>
-          <div id="blogSlotsGrid" class="blog-slots-grid"></div>
-          <p id="blogSlotsMessage" class="status" role="status" aria-live="polite"></p>
-        </section>
 
         <div id="postsTableWrap" class="table-wrap">
           <table>
@@ -193,7 +185,7 @@
           <h3>컬렉션 카테고리 구조</h3>
           <ul>
             <li>컬렉션: <code>posts</code></li>
-            <li>카테고리: <code>notice</code>(공지사항), <code>result</code>(성과 사례), <code>review</code>(후기), <code>blog</code>(블로그 소식)</li>
+            <li>카테고리: <code>notice</code>(공지사항), <code>result</code>(성과 사례), <code>review</code>(후기)</li>
             <li>스토리지 경로: <code>posts/{postId}/attachments/{filename}</code>, <code>posts/{postId}/inline/{filename}</code>, <code>posts/{postId}/review/{filename}</code></li>
           </ul>
         </article>
@@ -203,14 +195,13 @@
             <li><code>notice</code>: 공지사항 페이지(<code>notice.html</code>) 및 홈 공지 영역</li>
             <li><code>result</code>: 성과/후기 페이지(<code>results.html</code>) 성과 영역</li>
             <li><code>review</code>: 성과/후기 페이지(<code>results.html</code>) 후기 영역</li>
-            <li><code>blog</code>: 홈의 블로그 최신글 영역</li>
           </ul>
         </article>
         <article class="help-card">
           <h3>운영 팁</h3>
           <ul>
             <li>모든 글은 저장 시 즉시 <code>published</code> 상태로 반영됩니다.</li>
-            <li>블로그 소식은 카테고리 필터에서 5개 슬롯으로만 관리합니다.</li>
+            <li>블로그 최신글은 네이버 블로그 RSS에서 자동 동기화됩니다.</li>
             <li>성과 사례는 사진 1장, 제목(30자), 날짜, 내용으로 입력합니다.</li>
             <li>후기는 원형 프로필 사진 1장, 연도, 내용(40자 이내)으로 입력합니다.</li>
           </ul>
