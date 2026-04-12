@@ -26,7 +26,9 @@
 | 파일 저장소 | Firebase Storage — `posts/{postId}/**` 경로 |
 | 인증 | Firebase Authentication — 이메일/비밀번호 |
 | 에디터 | Quill 1.3.7 (리치 텍스트), Cropper.js 1.6.2 (후기 프로필 이미지 자르기), DOMPurify 3.1.7 |
-| Firebase SDK | CDN ESM 10.12.5 (`gstatic.com/firebasejs/10.12.5/`) |
+| Firebase SDK | npm `firebase` 패키지 (Vite 번들) |
+| 빌드 | Vite 8 (`npm run build` → `dist/`) |
+| 환경변수 | `.env.local` (`VITE_` 접두사) + `src/firebase.js` 중앙 초기화 |
 | CLI/배포 | `npx firebase-tools` (로컬에 전역 설치 없이 사용) |
 | 버전 관리 | Git + GitHub (`kimtaekyum/Sungjin_Web`, `main` 브랜치) |
 
@@ -376,7 +378,10 @@ git add -A
 git commit -m "변경 내용 요약"
 git push origin main
 
-# 3. Firebase 배포
+# 3. 프로덕션 빌드 (dist/ 생성 + 이미지 자동 복사)
+npm run build
+
+# 4. Firebase 배포
 npx -y firebase-tools deploy --only hosting --project sungjin-web
 
 # (Firestore/Storage 규칙도 변경했다면)
@@ -384,21 +389,18 @@ npx -y firebase-tools deploy --only firestore:rules,storage --project sungjin-we
 ```
 
 배포 후 반드시 `https://sungjin-web.web.app`에서 확인한다.
-JS 파일을 수정했다면 HTML의 `?v=` 쿼리 값을 올려야 브라우저 캐시가 갱신된다.
+Vite가 빌드 시 자동으로 파일명 해시를 붙이므로 `?v=` 수동 관리는 불필요.
 
 ---
 
 ## 13. 로컬 개발 환경
 
 ```bash
-# VS Code Live Server 사용
-# 또는:
 cd "/Users/mac_k/성진/Sungjin_Web_git"
-python3 -m http.server 5500
-# → http://localhost:5500 접속
+npm run dev   # → http://localhost:5173 (Vite HMR)
 ```
 
-`assets/js/firebase-config.js`가 없으면 Firestore 연동이 안 되므로, `firebase-config.example.js`를 복사해 실제 값을 채운다.
+`.env.local`이 없으면 Firebase 초기화가 안 된다. Firebase Console > 프로젝트 설정 > 내 앱(Web)에서 값을 확인해 `.env.local`을 생성한다.
 
 ---
 

@@ -1,6 +1,6 @@
 # 성진학원 웹사이트 프로젝트
 
-양천구 입시/내신 전문 성진학원 공식 홈페이지. 정적 HTML + 바닐라 JS + Firebase 스택.
+양천구 입시/내신 전문 성진학원 공식 홈페이지. Vite + npm + Firebase 스택.
 
 - 라이브: https://sungjin-web.web.app
 - GitHub: https://github.com/kimtaekyum/Sungjin_Web
@@ -8,8 +8,8 @@
 
 ## 기술 스택
 
-HTML5 + CSS3 + 바닐라 JavaScript (ES modules), Firebase Hosting/Firestore/Storage/Auth.
-빌드 도구나 번들러 없음. CDN ESM(`gstatic.com/firebasejs/10.12.5/`), Quill 1.3.7, Cropper.js 1.6.2, DOMPurify 3.1.7.
+HTML5 + CSS3 + 바닐라 JavaScript (ES modules), Vite 8 빌드, Firebase Hosting/Firestore/Storage/Auth.
+npm 패키지: firebase, quill@1.3.7, cropperjs@1.6.2, dompurify@3.1.7.
 
 ## 디렉터리 구조
 
@@ -23,25 +23,35 @@ Sungjin_Web_git/              ← 소스 오브 트루스 (Git)
 ├── contact.html              ← 상담 문의
 ├── admin/
 │   ├── index.html            ← 관리자 대시보드
-│   ├── admin.js              ← 인증/CRUD/에디터 (~1900줄)
+│   ├── admin.js              ← 인증/CRUD/에디터
 │   └── admin.css
+├── src/
+│   └── firebase.js           ← Firebase 중앙 초기화 (import.meta.env 사용)
 ├── assets/
-│   ├── js/main.js            ← 공개 사이트 스크립트 (~840줄)
-│   ├── js/firebase-config.js ← 실제 키 (.gitignore 대상)
+│   ├── js/main.js            ← 공개 사이트 스크립트
 │   ├── css/style.css
 │   └── data/                 ← 블로그 CSV/JSON 폴백
 ├── firebase/
 │   ├── firestore.rules
 │   └── storage.rules
-└── firebase.json
+├── .env.local                ← Firebase 키 (gitignore 대상)
+├── vite.config.js            ← Vite 멀티페이지 빌드 설정
+├── package.json
+└── firebase.json             ← public: "dist"
 ```
 
 ## 핵심 명령어
 
 ```bash
-# 로컬 서버
+# 로컬 개발 서버 (Vite HMR)
 cd "/Users/mac_k/성진/Sungjin_Web_git"
-python3 -m http.server 5500
+npm run dev   # → http://localhost:5173
+
+# 프로덕션 빌드 (dist/ 생성 + 이미지 복사)
+npm run build
+
+# 빌드 미리보기
+npm run preview
 
 # Firebase 배포 (반드시 --project sungjin-web 지정)
 npx -y firebase-tools deploy --only hosting --project sungjin-web
@@ -52,6 +62,11 @@ npx -y firebase-tools deploy --only firestore:rules,storage --project sungjin-we
 # Git 커밋 & 푸시
 git add -A && git commit -m "변경 내용" && git push origin main
 ```
+
+## Firebase 환경변수
+
+`.env.local` (gitignore 대상)에 `VITE_` 접두사로 설정. `src/firebase.js`에서 `import.meta.env.VITE_*`로 읽음.
+새 환경에서는 Firebase Console > 프로젝트 설정 > 내 앱(Web)에서 값을 확인해 `.env.local`을 직접 작성.
 
 ## 코드 스타일 규칙
 
@@ -105,34 +120,13 @@ posts/{postId}/attachments/{timestamp}-{safeName}
 
 관리자 추가: Firebase Console에서 Auth 사용자 생성 → Firestore `admins/{uid}` 문서에 `{ active: true }`.
 
-## 캐시 버스팅
-
-**IMPORTANT**: JS 수정 후 HTML의 `<script>` 태그에서 `?v=` 값을 반드시 변경해야 한다.
-현재: `?v=20260330a`. 빌드 시스템이 없으므로 수동 관리.
-
-현재 누락된 페이지: `about.html`, `contact.html`, `programs.html`에 `?v=` 미적용 상태.
-
-## 알려진 문제 (수정 필요)
-
-1. **한글 mojibake**: `main.js`의 `renderFirestoreList` 함수 (674~750줄) 내 한글 폴백 텍스트가 깨져 있음. "제목 없음", "자세히 보기", "후기", "이미지 준비 예정" 등을 정상 UTF-8로 재작성 필요
-2. **storage_review 에러 오도**: `admin.js` 1482줄에서 모든 에러에 동일 메시지 표시. 네트워크/권한 에러 구분 필요
-3. **Blob URL 누수**: `renderResultImagePreview` (admin.js 644줄)에서 `createObjectURL` 후 `revokeObjectURL` 미호출
-4. **카카오 오픈챗 URL**: `main.js` 6줄 `REPLACE_ME` → 실제 URL로 교체 필요
-5. **캐시버스팅 누락**: about.html, contact.html, programs.html
-
 ## 주의사항
 
-- `firebase-config.js`는 `.gitignore` 대상. 절대 커밋하지 않는다
-- 새 환경에서는 `firebase-config.example.js`를 복사해서 실제 키를 채워야 함
+- `.env.local`은 `.gitignore` 대상. 절대 커밋하지 않는다
 - `.firebaserc`에 앨리어스가 복수 존재. 배포 시 반드시 `--project sungjin-web` 지정
 - `coverImage`와 `featuredImage`는 동일 데이터를 저장 (레거시 호환). 둘 다 업데이트해야 함
 - `type`과 `category` 필드도 동일 값 저장 (레거시 호환). 둘 다 세팅해야 함
-
-## 정리 대상 (삭제 가능)
-
-- `index.broken.html`, `assets/js/main.broken.js`, `assets/css/style.broken.css` — 이전 백업
-- `_remote_admin.js` — 루트의 미사용 파일
-- main.js 내 WordPress REST 함수들 (`getCategoryIdBySlug`, `getPostsByCategorySlug`, `renderWpList`, `loadWpPostsInto`) — 미호출 데드 코드
+- `카카오 오픈챗 URL`: main.js 상단 `REPLACE_ME` 상수를 실제 URL로 교체 필요
 
 ## 검증 체크리스트
 
