@@ -389,6 +389,29 @@ th {
   flex-wrap: wrap;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 0.5rem;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: var(--gray);
+}
+
+.pagination-btn {
+  min-width: 60px;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .editor {
   margin-top: 1rem;
   border: 1px solid var(--border);

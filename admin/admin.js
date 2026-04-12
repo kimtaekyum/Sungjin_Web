@@ -69,6 +69,8 @@ let quillReadyPromise = null;
 let quillEditor = null;
 let imageCropper = null;
 let pendingCropResolve = null;
+const POSTS_PER_PAGE = 20;
+let currentPage = 1;
 
 const els = {
   authView: document.getElementById("authView"),
@@ -196,8 +198,8 @@ function bindEvents() {
   }
 
   [els.filterCategory, els.filterStatus, els.searchTitle].forEach((el) => {
-    el.addEventListener("input", renderPostsTable);
-    el.addEventListener("change", renderPostsTable);
+    el.addEventListener("input", () => { currentPage = 1; renderPostsTable(); });
+    el.addEventListener("change", () => { currentPage = 1; renderPostsTable(); });
   });
 }
 
@@ -386,7 +388,7 @@ async function fetchPosts() {
   }
 
   try {
-    const postQuery = query(collection(db, "posts"), orderBy("updatedAt", "desc"), limit(300));
+    const postQuery = query(collection(db, "posts"), orderBy("updatedAt", "desc"), limit(1000));
     const snap = await getDocs(postQuery);
     state.posts = snap.docs.map((docSnap) => normalizePostData(docSnap.id, docSnap.data()));
     renderPostsTable();
@@ -417,10 +419,17 @@ function renderPostsTable() {
 
   if (!filtered.length) {
     els.postsTableBody.innerHTML = "<tr><td colspan='5'>조건에 맞는 글이 없습니다.</td></tr>";
+    renderPagination(0, 0);
     return;
   }
 
-  els.postsTableBody.innerHTML = filtered
+  const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE);
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+  const startIdx = (currentPage - 1) * POSTS_PER_PAGE;
+  const pageItems = filtered.slice(startIdx, startIdx + POSTS_PER_PAGE);
+
+  els.postsTableBody.innerHTML = pageItems
     .map((post) => {
       const type = getPostType(post);
       const postStatus = String(post.status || "draft");
@@ -447,6 +456,42 @@ function renderPostsTable() {
       `;
     })
     .join("");
+
+  renderPagination(filtered.length, totalPages);
+}
+
+function renderPagination(totalItems, totalPages) {
+  let paginationEl = document.getElementById("postsPagination");
+  if (!paginationEl) {
+    paginationEl = document.createElement("div");
+    paginationEl.id = "postsPagination";
+    paginationEl.className = "pagination";
+    els.postsTableWrap.appendChild(paginationEl);
+  }
+
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = totalItems
+      ? `<span class="pagination-info">총 ${totalItems}건</span>`
+      : "";
+    return;
+  }
+
+  const prevDisabled = currentPage <= 1 ? "disabled" : "";
+  const nextDisabled = currentPage >= totalPages ? "disabled" : "";
+
+  paginationEl.innerHTML = `
+    <button type="button" class="btn btn-secondary pagination-btn" data-page="prev" ${prevDisabled}>이전</button>
+    <span class="pagination-info">${currentPage} / ${totalPages} 페이지 (총 ${totalItems}건)</span>
+    <button type="button" class="btn btn-secondary pagination-btn" data-page="next" ${nextDisabled}>다음</button>
+  `;
+
+  paginationEl.onclick = (e) => {
+    const btn = e.target.closest("[data-page]");
+    if (!btn || btn.disabled) return;
+    if (btn.dataset.page === "prev" && currentPage > 1) currentPage--;
+    else if (btn.dataset.page === "next" && currentPage < totalPages) currentPage++;
+    renderPostsTable();
+  };
 }
 function handleTableAction(event) {
   const target = event.target;
