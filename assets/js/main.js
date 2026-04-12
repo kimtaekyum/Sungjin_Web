@@ -1,3 +1,15 @@
+import { initializeApp, getApps } from "firebase/app";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+} from "firebase/firestore";
+import { firebaseConfig } from "../../src/firebase.js";
+
 (function () {
   let initialized = false;
   let revealObserver;
@@ -182,32 +194,22 @@
   }
 
   async function loadBlogPostsFromFirestore(blogList) {
-    const firebaseModules = await Promise.all([
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
-      import("./firebase-config.js"),
-    ]);
-
-    const firebaseApp = firebaseModules[0];
-    const firestoreMod = firebaseModules[1];
-    const firebaseLocal = firebaseModules[2];
-
-    var appName = "sungjin-main-blog";
-    var app = firebaseApp.getApps().find(function (item) {
+    const appName = "sungjin-main-blog";
+    let app = getApps().find(function (item) {
       return item.name === appName;
     });
     if (!app) {
-      app = firebaseApp.initializeApp(firebaseLocal.firebaseConfig, appName);
+      app = initializeApp(firebaseConfig, appName);
     }
-    const db = firestoreMod.getFirestore(app);
-    const postQuery = firestoreMod.query(
-      firestoreMod.collection(db, "posts"),
-      firestoreMod.where("status", "==", "published"),
-      firestoreMod.where("type", "==", "blog"),
-      firestoreMod.orderBy("updatedAt", "desc"),
-      firestoreMod.limit(50)
+    const db = getFirestore(app);
+    const postQuery = query(
+      collection(db, "posts"),
+      where("status", "==", "published"),
+      where("type", "==", "blog"),
+      orderBy("updatedAt", "desc"),
+      limit(50)
     );
-    const snap = await firestoreMod.getDocs(postQuery);
+    const snap = await getDocs(postQuery);
 
     const posts = snap.docs
       .map(function (docSnap) {
@@ -296,15 +298,6 @@
     });
   }
 
-  const WP_BASE = "/blog";
-  const WP_API = WP_BASE + "/wp-json/wp/v2";
-
-  function decodeEntities(html) {
-    const txt = document.createElement("textarea");
-    txt.innerHTML = html || "";
-    return txt.value;
-  }
-
   function stripHtml(html) {
     if (!html) {
       return "";
@@ -318,207 +311,6 @@
       return text || "";
     }
     return text.slice(0, maxLen).trim() + "...";
-  }
-
-  function formatDate(value) {
-    if (!value) {
-      return "";
-    }
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return "";
-    }
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return y + "-" + m + "-" + d;
-  }
-
-  function getFeaturedImage(post) {
-    const media = post && post._embedded && post._embedded["wp:featuredmedia"];
-    const first = media && media[0];
-    if (!first) {
-      return "";
-    }
-    const sizes = (first.media_details && first.media_details.sizes) || {};
-    return (
-      (sizes.medium && sizes.medium.source_url) ||
-      (sizes.thumbnail && sizes.thumbnail.source_url) ||
-      first.source_url ||
-      ""
-    );
-  }
-
-  async function getCategoryIdBySlug(slug) {
-    const res = await fetch(WP_API + "/categories?slug=" + encodeURIComponent(slug));
-    if (!res.ok) {
-      throw new Error("category fetch failed");
-    }
-    const data = await res.json();
-    if (!Array.isArray(data) || !data.length || !data[0].id) {
-      throw new Error("category not found");
-    }
-    return data[0].id;
-  }
-
-  async function getPostsByCategorySlug(slug, perPage) {
-    const catId = await getCategoryIdBySlug(slug);
-    const url =
-      WP_API +
-      "/posts?categories=" +
-      encodeURIComponent(catId) +
-      "&per_page=" +
-      encodeURIComponent(perPage) +
-      "&_embed=1&orderby=date&order=desc";
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error("post fetch failed");
-    }
-    return res.json();
-  }
-
-  function renderWpList(container, posts, options) {
-    const type = (options && options.type) || "notice";
-    container.innerHTML = "";
-
-    if (!Array.isArray(posts) || posts.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "wp-empty";
-      empty.textContent = "등록된 글이 없습니다.";
-      container.appendChild(empty);
-      refreshScrollReveal();
-      return;
-    }
-
-    const fragment = document.createDocumentFragment();
-
-    posts.forEach(function (post) {
-      const title = decodeEntities((post.title && post.title.rendered) || "제목 없음");
-      const excerpt = trimText(stripHtml(post.excerpt && post.excerpt.rendered), 120);
-      const dateText = formatDate(post.date);
-      const link = post.link || WP_BASE;
-      const imageUrl = getFeaturedImage(post);
-
-      if (type === "result") {
-        const card = document.createElement("article");
-        card.className = "case-card";
-        card.setAttribute("data-reveal", "up");
-
-        const media = document.createElement("div");
-        media.className = "media-box";
-        if (imageUrl) {
-          media.style.backgroundImage = 'url("' + imageUrl + '")';
-        } else {
-          media.classList.add("wp-placeholder");
-          media.innerHTML = '<span class="media-badge">이미지 없음</span>';
-        }
-
-        const body = document.createElement("div");
-        body.className = "card-body";
-
-        const h3 = document.createElement("h3");
-        h3.textContent = title;
-
-        const meta = document.createElement("p");
-        meta.className = "case-meta";
-        meta.textContent = dateText;
-
-        const p = document.createElement("p");
-        p.textContent = excerpt || "자세한 내용은 글에서 확인해주세요.";
-
-        const more = document.createElement("a");
-        more.className = "wp-post-link";
-        more.href = link;
-        more.textContent = "자세히 보기";
-
-        body.appendChild(h3);
-        body.appendChild(meta);
-        body.appendChild(p);
-        body.appendChild(more);
-        card.appendChild(media);
-        card.appendChild(body);
-        fragment.appendChild(card);
-        return;
-      }
-
-      if (type === "review" || type === "home-review") {
-        const card = document.createElement("article");
-        card.className = "testimonial-card";
-        card.setAttribute("data-reveal", "up");
-
-        const avatar = document.createElement("div");
-        avatar.className = "avatar";
-        if (imageUrl) {
-          avatar.style.backgroundImage = 'url("' + imageUrl + '")';
-        } else {
-          avatar.classList.add("wp-placeholder");
-        }
-
-        const badge = document.createElement("span");
-        badge.className = "type-badge";
-        badge.textContent = "후기";
-
-        const metaRow = document.createElement("div");
-        metaRow.className = "review-meta";
-        const reviewYear = (dateText || "").slice(0, 4);
-        if (reviewYear) {
-          const year = document.createElement("span");
-          year.className = "review-year";
-          year.textContent = reviewYear;
-          metaRow.appendChild(badge);
-          metaRow.appendChild(year);
-        } else {
-          metaRow.appendChild(badge);
-        }
-
-        const quote = document.createElement("p");
-        quote.className = "quote";
-        quote.textContent = excerpt || "자세한 내용은 글에서 확인해주세요.";
-
-        const linkEl = document.createElement("a");
-        linkEl.className = "wp-post-link";
-        linkEl.href = link;
-        linkEl.textContent = title;
-
-        card.appendChild(avatar);
-        card.appendChild(metaRow);
-        card.appendChild(quote);
-        card.appendChild(linkEl);
-        fragment.appendChild(card);
-        return;
-      }
-
-      const item = document.createElement("a");
-      item.className = "notice-item";
-      item.href = link;
-      item.setAttribute("data-reveal", "up");
-
-      const t = document.createElement("span");
-      t.textContent = title;
-      const d = document.createElement("span");
-      d.className = "notice-date";
-      d.textContent = dateText;
-
-      item.appendChild(t);
-      item.appendChild(d);
-      fragment.appendChild(item);
-    });
-
-    container.appendChild(fragment);
-    const existingError = container.querySelector(".wp-error--inline");
-    if (existingError) {
-      existingError.remove();
-    }
-    refreshScrollReveal();
-  }
-
-  async function loadWpPostsInto(container, slug, perPage, type) {
-    try {
-      const posts = await getPostsByCategorySlug(slug, perPage);
-      renderWpList(container, posts, { type: type });
-    } catch (err) {
-      console.warn("WP post load failed:", slug, err);
-    }
   }
 
   function resolveFirestoreType(post) {
@@ -549,15 +341,12 @@
       return value;
     }
     if (type === "notice") {
-      return "/blog/category/notice/";
+      return "/notice.html";
     }
-    if (type === "result") {
-      return "/blog/category/result/";
+    if (type === "result" || type === "review") {
+      return "/results.html";
     }
-    if (type === "review") {
-      return "/blog/category/review/";
-    }
-    return "/blog/";
+    return "/";
   }
 
   function normalizeFirestorePost(docSnap) {
@@ -590,33 +379,25 @@
 
   async function getFirestorePublishedPosts(slug, perPage) {
     const normalizedSlug = normalizePostType(slug);
-    const firebaseModules = await Promise.all([
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"),
-      import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"),
-      import("./firebase-config.js"),
-    ]);
-    const firebaseApp = firebaseModules[0];
-    const firestoreMod = firebaseModules[1];
-    const firebaseLocal = firebaseModules[2];
 
-    var appName = "sungjin-main-posts";
-    var app = firebaseApp.getApps().find(function (item) {
+    const appName = "sungjin-main-posts";
+    let app = getApps().find(function (item) {
       return item.name === appName;
     });
     if (!app) {
-      app = firebaseApp.initializeApp(firebaseLocal.firebaseConfig, appName);
+      app = initializeApp(firebaseConfig, appName);
     }
-    const db = firestoreMod.getFirestore(app);
+    const db = getFirestore(app);
 
     try {
-      const typeQuery = firestoreMod.query(
-        firestoreMod.collection(db, "posts"),
-        firestoreMod.where("status", "==", "published"),
-        firestoreMod.where("type", "==", normalizedSlug),
-        firestoreMod.orderBy("updatedAt", "desc"),
-        firestoreMod.limit(Math.max(50, perPage))
+      const typeQuery = query(
+        collection(db, "posts"),
+        where("status", "==", "published"),
+        where("type", "==", normalizedSlug),
+        orderBy("updatedAt", "desc"),
+        limit(Math.max(50, perPage))
       );
-      const typeSnap = await firestoreMod.getDocs(typeQuery);
+      const typeSnap = await getDocs(typeQuery);
       const typePosts = typeSnap.docs.map(normalizeFirestorePost).slice(0, perPage);
       if (typePosts.length > 0) {
         return typePosts;
@@ -624,14 +405,14 @@
 
       // Fallback: older docs might only have `category`.
       // This requires a composite index on (category, status, updatedAt desc).
-      const categoryQuery = firestoreMod.query(
-        firestoreMod.collection(db, "posts"),
-        firestoreMod.where("status", "==", "published"),
-        firestoreMod.where("category", "==", normalizedSlug),
-        firestoreMod.orderBy("updatedAt", "desc"),
-        firestoreMod.limit(Math.max(50, perPage))
+      const categoryQuery = query(
+        collection(db, "posts"),
+        where("status", "==", "published"),
+        where("category", "==", normalizedSlug),
+        orderBy("updatedAt", "desc"),
+        limit(Math.max(50, perPage))
       );
-      const categorySnap = await firestoreMod.getDocs(categoryQuery);
+      const categorySnap = await getDocs(categoryQuery);
       return categorySnap.docs.map(normalizeFirestorePost).slice(0, perPage);
     } catch (error) {
       error.queryMeta = buildPostQueryMeta(normalizedSlug, Math.max(50, perPage));
@@ -671,8 +452,8 @@
     const fragment = document.createDocumentFragment();
 
     posts.forEach(function (post) {
-      const title = post.title || "?쒕ぉ ?놁쓬";
-      const excerpt = post.excerpt || "?먯꽭???댁슜? ?붾낫湲곗뿉???뺤씤?섏꽭??";
+      const title = post.title || "제목 없음";
+      const excerpt = post.excerpt || "자세한 내용은 글에서 확인해주세요";
       const dateText = formatDateISO(post.dateObj);
       const link = resolveFirestorePostLink(post, type);
       const imageUrl = post.coverUrl;
@@ -687,7 +468,7 @@
         if (imageUrl) {
           media.style.backgroundImage = 'url("' + imageUrl + '")';
         } else {
-          media.innerHTML = '<span class="media-badge">?대?吏 異붽? ?덉젙</span>';
+          media.innerHTML = '<span class="media-badge">이미지 준비 예정</span>';
         }
 
         const body = document.createElement("div");
@@ -703,7 +484,7 @@
         const more = document.createElement("a");
         more.className = "wp-post-link";
         more.href = link;
-        more.textContent = "?먯꽭??蹂닿린";
+        more.textContent = "자세히 보기";
 
         body.appendChild(h3);
         body.appendChild(meta);
@@ -730,7 +511,7 @@
         metaRow.className = "review-meta";
         const badge = document.createElement("span");
         badge.className = "type-badge";
-        badge.textContent = "?꾧린";
+        badge.textContent = "후기";
         const year = document.createElement("span");
         year.className = "review-year";
         year.textContent = post.reviewYear || (dateText || "").slice(0, 4);
@@ -743,7 +524,7 @@
         const linkEl = document.createElement("a");
         linkEl.className = "wp-post-link";
         linkEl.href = link;
-        linkEl.textContent = "?먯꽭??蹂닿린";
+        linkEl.textContent = "자세히 보기";
 
         card.appendChild(avatar);
         card.appendChild(metaRow);

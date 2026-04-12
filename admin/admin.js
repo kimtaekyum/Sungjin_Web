@@ -1,10 +1,10 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  signOut,
+} from "firebase/auth";
 import {
   getFirestore,
   collection,
@@ -17,15 +17,20 @@ import {
   query,
   serverTimestamp,
   setDoc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  updateDoc,
+} from "firebase/firestore";
 import {
   deleteObject,
   getDownloadURL,
   getStorage,
   ref,
-  uploadBytesResumable
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+  uploadBytesResumable,
+} from "firebase/storage";
+import DOMPurify from "dompurify";
+import Quill from "quill";
+import Cropper from "cropperjs";
+import "cropperjs/dist/cropper.css";
+import "quill/dist/quill.snow.css";
 
 const ALLOWED_TYPES = new Set(["notice", "result", "review", "blog"]);
 const MAX_INLINE_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -201,16 +206,15 @@ async function initFirebaseClients() {
     return;
   }
   try {
-    const configModule = await import("../assets/js/firebase-config.js");
-    firebaseConfig = configModule?.firebaseConfig || null;
-    if (!firebaseConfig || typeof firebaseConfig !== "object") {
-      firebaseConfigLoadError = FIREBASE_CONFIG_IMPORT_ERROR_MESSAGE;
-      firebaseConfigReady = false;
-      console.error("[admin] firebase-config import invalid: missing named export `firebaseConfig`.", {
-        moduleKeys: Object.keys(configModule || {})
-      });
-      return;
-    }
+    firebaseConfig = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+    };
 
     invalidFirebaseKeys = getInvalidFirebaseConfigKeys(firebaseConfig);
     firebaseConfigReady = invalidFirebaseKeys.length === 0;
@@ -218,7 +222,7 @@ async function initFirebaseClients() {
       firebaseConfigLoadError = FIREBASE_CONFIG_ERROR_MESSAGE;
       console.error("[admin] Firebase config is invalid.", {
         invalidKeys: invalidFirebaseKeys,
-        config: firebaseConfig
+        config: firebaseConfig,
       });
       return;
     }
@@ -227,10 +231,11 @@ async function initFirebaseClients() {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    console.log("[admin] Firebase 초기화 완료");
   } catch (error) {
     firebaseConfigLoadError = FIREBASE_CONFIG_IMPORT_ERROR_MESSAGE;
     firebaseConfigReady = false;
-    console.error("[admin] firebase-config import failed", error);
+    console.error("[admin] Firebase 초기화 실패", error);
   }
 }
 
@@ -664,7 +669,11 @@ function renderResultImagePreview() {
     `);
   }
   if (selected) {
+    if (state._resultBlobUrl) {
+      URL.revokeObjectURL(state._resultBlobUrl);
+    }
     const tempUrl = URL.createObjectURL(selected);
+    state._resultBlobUrl = tempUrl;
     html.push(`
       <div class="preview-item">
         <img src="${tempUrl}" alt="업로드 성과 사례 사진 미리보기">
@@ -816,10 +825,10 @@ function applyImageCrop() {
       closeImageCropModal(null);
       return;
     }
-    const generatedName = buildSafeFilename(`review-${Date.now()}.png`);
+    const generatedName = buildSafeFilename(`review-${Date.now()}.jpg`);
     let outputFile = blob;
     try {
-      outputFile = new File([blob], generatedName, { type: blob.type || "image/png" });
+      outputFile = new File([blob], generatedName, { type: blob.type || "image/jpeg" });
     } catch (error) {
       console.warn("[admin] failed to wrap cropped blob as File", error);
     }
@@ -1480,7 +1489,7 @@ async function savePost(event) {
     logAdminError(saveStage, error);
     let message = "저장에 실패했습니다. 네트워크 상태를 확인하세요.";
     if (saveStage === "storage_review") {
-      message = "후기 프로필 이미지를 선택해 주세요.";
+      message = "후기 프로필 이미지 업로드에 실패했습니다: " + (error.message || "네트워크 상태를 확인하세요.");
     } else if (isStorageUploadError(error)) {
       message = buildStorageUploadErrorMessage(error);
     }
