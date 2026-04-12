@@ -534,19 +534,56 @@ import { firebaseConfig } from "../../src/firebase.js";
         return;
       }
 
-      const item = document.createElement("a");
-      item.className = "notice-item";
-      item.href = link;
-      item.setAttribute("data-reveal", "up");
+      var isNoticePage = window.location.pathname.indexOf("notice") !== -1;
 
-      const t = document.createElement("span");
-      t.textContent = title;
-      const d = document.createElement("span");
-      d.className = "notice-date";
-      d.textContent = dateText;
-      item.appendChild(t);
-      item.appendChild(d);
-      fragment.appendChild(item);
+      if (isNoticePage && post.contentHtml) {
+        var wrapper = document.createElement("div");
+        wrapper.className = "notice-item";
+        wrapper.setAttribute("data-reveal", "up");
+
+        var header = document.createElement("button");
+        header.className = "notice-header";
+        header.type = "button";
+        var ht = document.createElement("span");
+        ht.textContent = title;
+        var hd = document.createElement("span");
+        hd.className = "notice-date";
+        hd.textContent = dateText;
+        header.appendChild(ht);
+        header.appendChild(hd);
+
+        var body = document.createElement("div");
+        body.className = "notice-body";
+        body.hidden = true;
+        var content = document.createElement("div");
+        content.className = "notice-content";
+        content.innerHTML = post.contentHtml;
+        body.appendChild(content);
+
+        header.addEventListener("click", function () {
+          var open = !body.hidden;
+          body.hidden = open;
+          wrapper.classList.toggle("is-open", !open);
+        });
+
+        wrapper.appendChild(header);
+        wrapper.appendChild(body);
+        fragment.appendChild(wrapper);
+      } else {
+        var item = document.createElement("a");
+        item.className = "notice-item";
+        item.href = link;
+        item.setAttribute("data-reveal", "up");
+
+        var t = document.createElement("span");
+        t.textContent = title;
+        var d = document.createElement("span");
+        d.className = "notice-date";
+        d.textContent = dateText;
+        item.appendChild(t);
+        item.appendChild(d);
+        fragment.appendChild(item);
+      }
     });
 
     container.appendChild(fragment);

@@ -768,7 +768,7 @@ function openImageCropModal(file, options = {}) {
         els.imageCropModal.classList.remove("is-circle");
       }
 
-      imageCropper = new window.Cropper(els.cropImage, {
+      imageCropper = new Cropper(els.cropImage, {
         viewMode: 1,
         dragMode: "move",
         aspectRatio: options.aspectRatio || NaN,
@@ -1054,8 +1054,8 @@ async function createBlogPostForSlot(slotNo, title, blogLink) {
 
 function sanitizeHtml(value) {
   const html = value || "";
-  if (window.DOMPurify && typeof window.DOMPurify.sanitize === "function") {
-    return window.DOMPurify.sanitize(html, {
+  if (DOMPurify && typeof DOMPurify.sanitize === "function") {
+    return DOMPurify.sanitize(html, {
       ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|data:image\/)|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
     });
   }
@@ -1063,12 +1063,12 @@ function sanitizeHtml(value) {
 }
 
 function initRichEditor() {
-  if (quillReadyPromise || typeof window.Quill === "undefined") {
+  if (quillReadyPromise || typeof Quill === "undefined") {
     return quillReadyPromise;
   }
 
   quillReadyPromise = Promise.resolve().then(() => {
-    quillEditor = new window.Quill("#contentEditor", {
+    quillEditor = new Quill("#contentEditor", {
       theme: "snow",
       placeholder: "본문을 입력하세요.",
       modules: {
@@ -1482,9 +1482,10 @@ async function savePost(event) {
       await setDoc(postRef, payload);
     }
 
-    setStatus(els.formMessage, "저장되었습니다.");
+    const statusLabel = status === "published" ? "게시 완료되었습니다." : "임시 저장되었습니다.";
     closeEditor();
     await fetchPosts();
+    setStatus(els.globalStatus, `"${title}" — ${statusLabel}`);
   } catch (error) {
     logAdminError(saveStage, error);
     let message = "저장에 실패했습니다. 네트워크 상태를 확인하세요.";
