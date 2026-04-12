@@ -318,52 +318,45 @@ a9e1c9c  Add main pages for 성진학원 website
 
 ## 10. 해야 할 일 / 개선 과제
 
-### 10-1. 높은 우선순위
+### 10-1. 완료된 항목 (2026-04-12)
 
-| 항목 | 상세 |
-|------|------|
-| **라이브 검증** | 배포 후 `sungjin-web.web.app`에서 공지/성과/후기/블로그 목록이 정상 로드되는지 브라우저 콘솔 확인. `/admin`에서 로그인 → 게시글 저장 → 이미지 업로드 전체 흐름 테스트. |
-| **Firestore 인덱스 확인** | Firebase Console > Firestore > 인덱스 탭에서 `type+status+updatedAt`와 `category+status+updatedAt` 복합 인덱스가 `Enabled` 상태인지 확인. 없으면 생성. |
-| **Firebase CLI 재인증** | 배포 시 `Authentication Error: Your credentials are no longer valid` 경고가 나왔다. `npx firebase-tools login --reauth` 실행 권장. |
+- ✅ 라이브 검증 — 배포 후 공지/성과/후기/블로그 정상 로드 확인
+- ✅ Firestore 복합 인덱스 — `firestore.indexes.json` 생성 + CLI 배포 완료
+- ✅ firestore.indexes.json 추가 — `firebase.json`에 indexes 경로 연결
+- ✅ Result 이미지 Blob URL 누수 수정 — `state._resultBlobUrl`로 관리
+- ✅ 한글 mojibake 수정 — UTF-8 바이너리 레벨 수정
+- ✅ WordPress REST 코드 정리 — `main.js`에서 WP 관련 함수 ~200줄 삭제
+- ✅ about.html 콘텐츠 업데이트 — Google Doc 기반 반영
+- ✅ Review crop MIME 수정 — `.png` → `.jpg`, MIME `image/jpeg`
+- ✅ 캐시 버스팅 → Vite 자동 해시로 대체 (수동 `?v=` 불필요)
+- ✅ storage_review 에러 메시지 개선 — 실제 에러 메시지 표시
+- ✅ CDN → npm 마이그레이션 (Vite 8 빌드 시스템)
+- ✅ 공지사항 아코디언 본문 표시 기능 추가
+- ✅ 관리자 저장 성공/실패 알림 추가
+- ✅ 백업 파일 정리 (`*.broken.*`, `_remote_admin.js` 삭제)
 
-### 10-2. 중간 우선순위
+### 10-2. 남은 과제
 
-| 항목 | 상세 |
-|------|------|
-| **`firestore.indexes.json` 추가** | 현재 인덱스가 콘솔 수동 생성이라 환경 재구축 시 누락 위험. `firebase.json`에 `"indexes"` 경로를 추가하고 `firebase deploy --only firestore:indexes`로 관리 권장. |
-| **비원자적 저장 (Storage → Firestore)** | 이미지 업로드 후 Firestore 쓰기가 실패하면 Storage에 고아 파일이 남는다. Cloud Functions로 정리하거나 트랜잭션 패턴을 도입할 수 있음. |
-| **Result 이미지 Blob URL 누수** | `renderResultImagePreview`가 생성한 Object URL을 `state`에 저장하지 않아 `revokeObjectURL`이 호출되지 않는다. 반복 선택 시 메모리 누수 가능. |
-| **`renderFirestoreList` 내 한글 인코딩 깨짐** | 일부 한글 리터럴이 mojibake로 표시됨. 파일을 UTF-8로 다시 저장하면 해결. |
-| **관리자 게시글 목록 300건 제한** | `fetchPosts`의 `limit(300)` 때문에 오래된 글은 관리자 목록에 안 뜸. 페이지네이션 또는 `startAfter` 도입 필요. |
-
-### 10-3. 낮은 우선순위 / 선택
-
-| 항목 | 상세 |
-|------|------|
-| **WordPress REST 코드 정리** | `main.js`에 WP REST API 관련 함수(`getPostsByCategorySlug`, `renderWpList` 등)가 남아있으나 `init()`에서 호출되지 않음. 삭제해도 무방. |
-| **로컬 폴더 통합** | `Sungjin_Web`과 `Sungjin_Web_git` 2개 폴더 운영 중. Git이 있는 `Sungjin_Web_git` 하나로 통합 권장. |
-| **`about.html` 콘텐츠 업데이트** | `CONTENT_UPDATE_TEMPLATE.md` 템플릿이 준비되어 있음. Word 문서 수령 후 반영. |
-| **Review crop MIME 불일치** | `applyImageCrop`이 JPEG로 출력하지만 파일명이 `.png`으로 생성될 수 있음. 실사용에는 문제 없으나 정리 가능. |
-| **블로그 슬롯 vs 일반 편집기 통합** | `blog` 타입은 별도 슬롯 UI(`createBlogPostForSlot`)를 사용하고, notice/result/review는 리치 텍스트 편집기를 사용. UX 통합 여지 있음. |
+| 항목 | 우선순위 | 상세 |
+|------|----------|------|
+| **비원자적 저장** | 중간 | 이미지 업로드 후 Firestore 쓰기 실패 시 Storage 고아 파일 발생. Cloud Functions 정리 또는 트랜잭션 패턴 도입 |
+| **관리자 게시글 300건 제한** | 중간 | `fetchPosts`의 `limit(300)` — 페이지네이션 또는 `startAfter` 도입 필요 |
+| **로컬 폴더 통합** | 낮음 | `Sungjin_Web`과 `Sungjin_Web_git` 2개 폴더 → `Sungjin_Web_git` 하나로 통합 권장 |
+| **블로그 편집기 통합** | 낮음 | `blog` 타입 별도 슬롯 UI vs notice/result/review 리치 텍스트 편집기 UX 통합 |
+| **카카오 오픈챗 URL** | 낮음 | `main.js` 상단 `REPLACE_ME` 상수를 실제 카카오 오픈챗 URL로 교체 |
 
 ---
 
 ## 11. 알려진 문제점 / 주의사항
 
-1. **`storage_review` 에러 메시지 오도 가능성**
-   `saveStage === "storage_review"` 시점에서 발생하는 모든 에러에 "후기 프로필 이미지를 선택해 주세요"가 뜬다. 네트워크/권한 에러와 구분되지 않음.
-
-2. **Review crop 타임스탬프 중복**
+1. **Review crop 타임스탬프 중복**
    Storage 경로에 `Date.now()`가 들어가고, `buildSafeFilename`도 `Date.now()`를 붙여 이중으로 들어감. 무해하지만 경로가 길어짐.
 
-3. **`normalizePostData`의 coverImage/featuredImage 동기화**
+2. **`normalizePostData`의 coverImage/featuredImage 동기화**
    두 필드에 동일한 이미지 객체를 넣는데, Firestore raw 데이터에서 둘이 다르면 혼란 가능.
 
-4. **캐시 버스팅 수동 관리**
-   JS 파일 수정 후 HTML의 `?v=` 값을 직접 바꿔야 함. 빌드 시스템이 없어 자동화되지 않음.
-
-5. **Firebase 키 공개**
-   `firebase-config.js`의 값은 클라이언트에 노출됨 (Firebase Web SDK 특성상 정상). 실제 보안은 Firestore/Storage Rules로 제어.
+3. **Firebase 키 공개**
+   `.env.local`의 값은 빌드 시 JS에 포함되어 클라이언트에 노출됨 (Firebase Web SDK 특성상 정상). 실제 보안은 Firestore/Storage Rules로 제어.
 
 ---
 
